@@ -6,6 +6,8 @@ import type {
   LocalSettings,
   PathDialogKind,
   PathValidation,
+  RestoreSaveRequest,
+  TrashSaveRequest,
   UdpPortApplyRequest
 } from '../shared/types'
 import { TorchlightGameLaunchService } from './services/game-launch.service'
@@ -24,7 +26,10 @@ const ipcChannels = {
   applyUdpPort: 'environment:apply-udp-port',
   launchGame: 'environment:launch-game',
   listSaves: 'saves:list',
-  openSavesFolder: 'saves:open-folder'
+  openSavesFolder: 'saves:open-folder',
+  listSaveTrash: 'saves:list-trash',
+  moveSaveToTrash: 'saves:move-to-trash',
+  restoreSave: 'saves:restore'
 } as const
 
 const createDefaultSettings = (): LocalSettings => {
@@ -115,6 +120,16 @@ const isUdpPortApplyRequest = (
   )
 }
 
+const isTrashSaveRequest = (value: unknown): value is TrashSaveRequest =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as Record<string, unknown>).fullPath === 'string'
+
+const isRestoreSaveRequest = (value: unknown): value is RestoreSaveRequest =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as Record<string, unknown>).trashId === 'string'
+
 const showPathDialog = async (
   kind: PathDialogKind,
   parentWindow: BrowserWindow | null
@@ -155,7 +170,12 @@ const registerEnvironmentHandlers = (): void => {
     processService,
     logService
   )
-  const saveManagerService = new DefaultSaveManagerService(settingsService)
+  const saveManagerService = new DefaultSaveManagerService(
+    settingsService,
+    processService,
+    logService,
+    join(app.getPath('userData'), 'trash', 'saves')
+  )
 
   ipcMain.handle(ipcChannels.loadConfig, () => settingsService.load())
   ipcMain.handle(
@@ -213,6 +233,26 @@ const registerEnvironmentHandlers = (): void => {
   ipcMain.handle(ipcChannels.openSavesFolder, () =>
     saveManagerService.openSavesFolder()
   )
+  ipcMain.handle(ipcChannels.listSaveTrash, () =>
+    saveManagerService.listTrash()
+  )
+  ipcMain.handle(
+    ipcChannels.moveSaveToTrash,
+    (_event, request: unknown) => {
+      if (!isTrashSaveRequest(request)) {
+        throw new Error('Invalid move to trash request.')
+      }
+
+      return saveManagerService.moveToTrash(request.fullPath)
+    }
+  )
+  ipcMain.handle(ipcChannels.restoreSave, (_event, request: unknown) => {
+    if (!isRestoreSaveRequest(request)) {
+      throw new Error('Invalid restore request.')
+    }
+
+    return saveManagerService.restore(request.trashId)
+  })
 }
 
 const createMainWindow = (): BrowserWindow => {

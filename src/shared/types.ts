@@ -90,6 +90,37 @@ export interface OpenSavesFolderResult {
   readonly errorCode?: string
 }
 
+export interface TrashSaveRequest {
+  readonly fullPath: string
+}
+
+export interface RestoreSaveRequest {
+  readonly trashId: string
+}
+
+export interface TrashedSaveItem {
+  readonly trashId: string
+  readonly originalPath: string
+  readonly trashedPath: string
+  readonly fileName: string
+  readonly kind: Exclude<SaveFileKind, 'unknown'>
+  readonly trashedAt: string
+  readonly sizeBytes: number
+}
+
+export interface TrashListResult {
+  readonly success: boolean
+  readonly items: readonly TrashedSaveItem[]
+  readonly message?: string
+  readonly errorCode?: string
+}
+
+export interface SaveActionResult {
+  readonly success: boolean
+  readonly message: string
+  readonly errorCode?: string
+}
+
 export type ModUpdateState =
   | { readonly status: 'idle' }
   | { readonly status: 'checking' }
@@ -119,5 +150,12 @@ export interface LogicSetApi {
   readonly saves: {
     readonly list: () => Promise<SaveListResult>
     readonly openFolder: () => Promise<OpenSavesFolderResult>
+    readonly listTrash: () => Promise<TrashListResult>
+    readonly moveToTrash: (
+      request: TrashSaveRequest
+    ) => Promise<SaveActionResult>
+    readonly restore: (
+      request: RestoreSaveRequest
+    ) => Promise<SaveActionResult>
   }
 }

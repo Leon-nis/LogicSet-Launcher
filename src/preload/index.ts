@@ -22,7 +22,11 @@ const logicSetApi: LogicSetApi = {
   },
   saves: {
     list: () => ipcRenderer.invoke('saves:list'),
-    openFolder: () => ipcRenderer.invoke('saves:open-folder')
+    openFolder: () => ipcRenderer.invoke('saves:open-folder'),
+    listTrash: () => ipcRenderer.invoke('saves:list-trash'),
+    moveToTrash: (request) =>
+      ipcRenderer.invoke('saves:move-to-trash', request),
+    restore: (request) => ipcRenderer.invoke('saves:restore', request)
   }
 }
 

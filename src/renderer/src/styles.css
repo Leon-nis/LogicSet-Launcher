@@ -449,7 +449,8 @@ button:focus-visible {
 }
 
 .secondary-button,
-.primary-button {
+.primary-button,
+.danger-button {
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
@@ -520,6 +521,30 @@ button:focus-visible {
 .primary-button:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.danger-button {
+  padding: 9px 13px;
+  border: 1px solid #714043;
+  color: #efb2b5;
+  background: #2c1a1d;
+}
+
+.danger-button:hover {
+  border-color: #985459;
+  background: #382024;
+}
+
+.danger-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.compact-button {
+  width: max-content;
+  min-width: 104px;
+  white-space: nowrap;
 }
 
 .udp-port-panel {
@@ -691,6 +716,10 @@ button:focus-visible {
   width: 190px;
 }
 
+.saves-table th:nth-child(5) {
+  width: 150px;
+}
+
 .saves-table tbody tr:last-child td {
   border-bottom: 0;
 }
@@ -756,6 +785,31 @@ button:focus-visible {
 
 .saves-empty-state.error strong {
   color: #f1abab;
+}
+
+.trash-panel {
+  margin-top: 18px;
+}
+
+.trash-panel .saves-toolbar-copy .eyebrow {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.trash-count {
+  flex: none;
+  padding: 6px 10px;
+  border: 1px solid #354452;
+  border-radius: 999px;
+  color: #aeb9c5;
+  background: #17212a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.action-unavailable {
+  color: #687482;
+  font-size: 12px;
 }
 
 @media (max-width: 1100px) {
@@ -848,6 +902,10 @@ button:focus-visible {
     width: 100%;
   }
 
+  .trash-count {
+    align-self: flex-start;
+  }
+
   .saves-table,
   .saves-table tbody,
   .saves-table tr,
@@ -884,6 +942,10 @@ button:focus-visible {
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+
+  .saves-table .compact-button {
+    width: 100%;
   }
 }
 
