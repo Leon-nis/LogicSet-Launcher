@@ -7,12 +7,14 @@ import type {
   PathDialogKind,
   PathValidation,
   RestoreSaveRequest,
+  SaveManifestUrlRequest,
   TrashSaveRequest,
   UdpPortApplyRequest
 } from '../shared/types'
 import { TorchlightGameLaunchService } from './services/game-launch.service'
 import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
+import { DefaultModUpdateService } from './services/mod-update.service'
 import { SystemProcessService } from './services/process.service'
 import { DefaultSaveManagerService } from './services/save-manager.service'
 import { FileTorchlightSettingsService } from './services/torchlight-settings.service'
@@ -29,7 +31,11 @@ const ipcChannels = {
   openSavesFolder: 'saves:open-folder',
   listSaveTrash: 'saves:list-trash',
   moveSaveToTrash: 'saves:move-to-trash',
-  restoreSave: 'saves:restore'
+  restoreSave: 'saves:restore',
+  getModUpdateInfo: 'mod-update:get-info',
+  saveManifestUrl: 'mod-update:save-manifest-url',
+  checkModUpdate: 'mod-update:check',
+  installModUpdate: 'mod-update:install'
 } as const
 
 const createDefaultSettings = (): LocalSettings => {
@@ -47,6 +53,10 @@ const createDefaultSettings = (): LocalSettings => {
       savesDirectoryPath: join(torchlightDocumentsPath, 'modsave'),
       modsDirectoryPath: join(torchlightDocumentsPath, 'mods'),
       localSettingsPath: join(torchlightDocumentsPath, 'local_settings.txt')
+    },
+    modUpdate: {
+      manifestUrl: '',
+      installedVersion: null
     }
   }
 }
@@ -130,6 +140,13 @@ const isRestoreSaveRequest = (value: unknown): value is RestoreSaveRequest =>
   value !== null &&
   typeof (value as Record<string, unknown>).trashId === 'string'
 
+const isSaveManifestUrlRequest = (
+  value: unknown
+): value is SaveManifestUrlRequest =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as Record<string, unknown>).manifestUrl === 'string'
+
 const showPathDialog = async (
   kind: PathDialogKind,
   parentWindow: BrowserWindow | null
@@ -175,6 +192,13 @@ const registerEnvironmentHandlers = (): void => {
     processService,
     logService,
     join(app.getPath('userData'), 'trash', 'saves')
+  )
+  const modUpdateService = new DefaultModUpdateService(
+    settingsService,
+    processService,
+    logService,
+    join(app.getPath('userData'), 'downloads'),
+    join(app.getPath('userData'), 'backups', 'mod-update')
   )
 
   ipcMain.handle(ipcChannels.loadConfig, () => settingsService.load())
@@ -253,6 +277,25 @@ const registerEnvironmentHandlers = (): void => {
 
     return saveManagerService.restore(request.trashId)
   })
+  ipcMain.handle(ipcChannels.getModUpdateInfo, () =>
+    modUpdateService.getInfo()
+  )
+  ipcMain.handle(
+    ipcChannels.saveManifestUrl,
+    (_event, request: unknown) => {
+      if (!isSaveManifestUrlRequest(request)) {
+        throw new Error('Invalid manifest URL request.')
+      }
+
+      return modUpdateService.saveManifestUrl(request.manifestUrl)
+    }
+  )
+  ipcMain.handle(ipcChannels.checkModUpdate, () =>
+    modUpdateService.checkForUpdate()
+  )
+  ipcMain.handle(ipcChannels.installModUpdate, () =>
+    modUpdateService.installUpdate()
+  )
 }
 
 const createMainWindow = (): BrowserWindow => {

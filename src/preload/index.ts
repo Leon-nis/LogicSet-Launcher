@@ -27,6 +27,13 @@ const logicSetApi: LogicSetApi = {
     moveToTrash: (request) =>
       ipcRenderer.invoke('saves:move-to-trash', request),
     restore: (request) => ipcRenderer.invoke('saves:restore', request)
+  },
+  modUpdate: {
+    getInfo: () => ipcRenderer.invoke('mod-update:get-info'),
+    saveManifestUrl: (request) =>
+      ipcRenderer.invoke('mod-update:save-manifest-url', request),
+    check: () => ipcRenderer.invoke('mod-update:check'),
+    install: () => ipcRenderer.invoke('mod-update:install')
   }
 }
 

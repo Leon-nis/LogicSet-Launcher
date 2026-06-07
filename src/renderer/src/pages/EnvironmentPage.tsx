@@ -6,6 +6,7 @@ import type {
   GamePathKey,
   GamePaths,
   LocalSettings,
+  ModUpdateSettings,
   PathDialogKind,
   PathValidation
 } from '../../../shared/types'
@@ -62,6 +63,11 @@ export const EnvironmentPage = (): React.JSX.Element => {
   const [paths, setPaths] = useState<GamePaths>(emptyPaths)
   const [validation, setValidation] =
     useState<PathValidation>(emptyValidation)
+  const [modUpdateSettings, setModUpdateSettings] =
+    useState<ModUpdateSettings>({
+      manifestUrl: '',
+      installedVersion: null
+    })
   const [isSavedExecutableValid, setIsSavedExecutableValid] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -117,6 +123,7 @@ export const EnvironmentPage = (): React.JSX.Element => {
       try {
         const settings = await window.logicSet.environment.loadConfig()
         setPaths(settings.gamePaths)
+        setModUpdateSettings(settings.modUpdate)
         const [loadedValidation] = await Promise.all([
           refreshValidation(settings.gamePaths),
           loadUdpPort(settings.gamePaths.localSettingsPath)
@@ -185,13 +192,15 @@ export const EnvironmentPage = (): React.JSX.Element => {
 
     const settings: LocalSettings = {
       schemaVersion: 1,
-      gamePaths: paths
+      gamePaths: paths,
+      modUpdate: modUpdateSettings
     }
 
     try {
       const savedSettings =
         await window.logicSet.environment.saveConfig(settings)
       setPaths(savedSettings.gamePaths)
+      setModUpdateSettings(savedSettings.modUpdate)
       const savedValidation =
         await refreshValidation(savedSettings.gamePaths)
       setIsSavedExecutableValid(

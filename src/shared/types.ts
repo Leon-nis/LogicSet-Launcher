@@ -31,6 +31,12 @@ export type PathDialogKind =
 export interface LocalSettings {
   readonly schemaVersion: 1
   readonly gamePaths: GamePaths
+  readonly modUpdate: ModUpdateSettings
+}
+
+export interface ModUpdateSettings {
+  readonly manifestUrl: string
+  readonly installedVersion: string | null
 }
 
 export type UdpPortReadResult =
@@ -121,16 +127,40 @@ export interface SaveActionResult {
   readonly errorCode?: string
 }
 
-export type ModUpdateState =
-  | { readonly status: 'idle' }
-  | { readonly status: 'checking' }
-  | { readonly status: 'up-to-date'; readonly version: string }
-  | {
-      readonly status: 'update-available'
-      readonly currentVersion: string
-      readonly availableVersion: string
-    }
-  | { readonly status: 'error'; readonly message: string }
+export interface ModpackManifestFile {
+  readonly relativePath: string
+  readonly sha256: string
+  readonly sizeBytes: number
+}
+
+export interface ModpackManifest {
+  readonly modpackName: string
+  readonly version: string
+  readonly channel: string
+  readonly downloadUrl: string
+  readonly sha256: string
+  readonly sizeBytes: number
+  readonly requiredLauncherVersion: string
+  readonly notes: string
+  readonly files: readonly ModpackManifestFile[]
+}
+
+export interface ModUpdateInfo {
+  readonly manifestUrl: string
+  readonly installedVersion: string | null
+  readonly manifest: ModpackManifest | null
+}
+
+export interface ModUpdateResult {
+  readonly success: boolean
+  readonly message: string
+  readonly info: ModUpdateInfo
+  readonly errorCode?: string
+}
+
+export interface SaveManifestUrlRequest {
+  readonly manifestUrl: string
+}
 
 export interface LogicSetApi {
   readonly getAppInfo: () => Promise<AppInfo>
@@ -157,5 +187,13 @@ export interface LogicSetApi {
     readonly restore: (
       request: RestoreSaveRequest
     ) => Promise<SaveActionResult>
+  }
+  readonly modUpdate: {
+    readonly getInfo: () => Promise<ModUpdateInfo>
+    readonly saveManifestUrl: (
+      request: SaveManifestUrlRequest
+    ) => Promise<ModUpdateResult>
+    readonly check: () => Promise<ModUpdateResult>
+    readonly install: () => Promise<ModUpdateResult>
   }
 }

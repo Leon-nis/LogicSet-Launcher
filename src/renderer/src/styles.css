@@ -242,6 +242,7 @@ button:focus-visible {
 .placeholder-card,
 .environment-panel,
 .game-launch-panel,
+.mod-update-panel,
 .saves-panel,
 .udp-port-panel {
   min-width: 0;
@@ -812,6 +813,136 @@ button:focus-visible {
   font-size: 12px;
 }
 
+.mod-update-panel {
+  overflow: hidden;
+  border: 1px solid #232f3b;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #121a23, #0e151d);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
+}
+
+.manifest-settings {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  padding: 24px 26px;
+  border-bottom: 1px solid #202b36;
+}
+
+.manifest-settings-copy h2 {
+  margin: 0 0 7px;
+  font-size: 20px;
+}
+
+.manifest-settings-copy p {
+  max-width: 680px;
+  margin: 0 0 8px;
+  color: #8f9baa;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.manifest-settings > label {
+  color: #e8edf4;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.manifest-url-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+}
+
+.manifest-url-row input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #2a3744;
+  border-radius: 8px;
+  outline: none;
+  color: #dbe3eb;
+  background: #0b1219;
+}
+
+.manifest-url-row input:focus {
+  border-color: #428c7e;
+  box-shadow: 0 0 0 3px rgb(66 140 126 / 14%);
+}
+
+.mod-version-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid #202b36;
+}
+
+.mod-version-card {
+  min-width: 0;
+  padding: 22px 26px;
+  border-right: 1px solid #202b36;
+}
+
+.mod-version-card:last-child {
+  border-right: 0;
+}
+
+.mod-version-card span,
+.manifest-detail-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #768494;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mod-version-card strong,
+.manifest-details strong {
+  color: #e4ebf1;
+  overflow-wrap: anywhere;
+}
+
+.manifest-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  padding: 24px 26px;
+  border-bottom: 1px solid #202b36;
+}
+
+.manifest-notes {
+  grid-column: 1 / -1;
+}
+
+.manifest-notes p {
+  margin: 0;
+  color: #a0acb9;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.mod-update-actions {
+  display: flex;
+  min-width: 0;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 26px;
+}
+
+.mod-update-feedback {
+  min-width: 0;
+}
+
+.install-update-button {
+  flex: none;
+}
+
 @media (max-width: 1100px) {
   .app-shell {
     grid-template-columns: 92px minmax(0, 1fr);
@@ -945,6 +1076,37 @@ button:focus-visible {
   }
 
   .saves-table .compact-button {
+    width: 100%;
+  }
+
+  .manifest-url-row,
+  .mod-version-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mod-version-card {
+    border-right: 0;
+    border-bottom: 1px solid #202b36;
+  }
+
+  .mod-version-card:last-child {
+    border-bottom: 0;
+  }
+
+  .manifest-details {
+    grid-template-columns: 1fr;
+  }
+
+  .manifest-notes {
+    grid-column: auto;
+  }
+
+  .mod-update-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .install-update-button {
     width: 100%;
   }
 }
