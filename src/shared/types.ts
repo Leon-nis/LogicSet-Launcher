@@ -6,15 +6,27 @@ export interface AppInfo {
 }
 
 export interface GamePaths {
-  readonly torchlightInstallPath: string | null
-  readonly modDirectoryPath: string | null
-  readonly savesDirectoryPath: string | null
+  readonly torchlightExecutablePath: string
+  readonly savesDirectoryPath: string
+  readonly modsDirectoryPath: string
+  readonly localSettingsPath: string
 }
+
+export type GamePathKey = keyof GamePaths
+
+export type PathValidation = Readonly<Record<GamePathKey, boolean>>
 
 export interface EnvironmentStatus {
   readonly paths: GamePaths
+  readonly validation: PathValidation
   readonly isConfigured: boolean
 }
+
+export type PathDialogKind =
+  | 'torchlight-executable'
+  | 'saves-directory'
+  | 'mods-directory'
+  | 'local-settings'
 
 export interface LocalSettings {
   readonly schemaVersion: 1
@@ -40,4 +52,10 @@ export type ModUpdateState =
 
 export interface LogicSetApi {
   readonly getAppInfo: () => Promise<AppInfo>
+  readonly environment: {
+    readonly loadConfig: () => Promise<LocalSettings>
+    readonly saveConfig: (settings: LocalSettings) => Promise<LocalSettings>
+    readonly validatePaths: (paths: GamePaths) => Promise<PathValidation>
+    readonly browsePath: (kind: PathDialogKind) => Promise<string | null>
+  }
 }
