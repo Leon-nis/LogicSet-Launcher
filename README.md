@@ -3,9 +3,10 @@
 Desktop utility for managing a modded Torchlight II multiplayer environment
 focused on the LogicSet mod.
 
-The project is currently an application shell. Filesystem operations, save
-management, mod updates, desync checks, and rollback workflows are intentionally
-not implemented yet.
+The project is currently an application foundation. V1 is focused on pre-game
+environment setup, remote modpack updates, simple save management, and local
+logging. Anti-desync features, save rollback, and advanced save parsing are not
+part of V1.
 
 ## Stack
 
@@ -64,7 +65,8 @@ src/
 - `renderer` contains the React application.
 - `shared` contains contracts that can be used across process boundaries.
 
-See [docs/V1_SCOPE.md](docs/V1_SCOPE.md) for the initial product scope.
+See [docs/V1_SCOPE.md](docs/V1_SCOPE.md) for the complete V1 scope, safety
+requirements, current implementation status, and explicitly deferred features.
 
 ## License
 

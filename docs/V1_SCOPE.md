@@ -1,72 +1,126 @@
-# V1 Scope
+# LogicSet Launcher V1 Scope
 
 ## Overview
 
-LogicSet Launcher is a desktop utility for players using Torchlight II modded
-multiplayer with the LogicSet mod.
+LogicSet Launcher is a desktop utility for Torchlight II modded multiplayer,
+focused on the LogicSet mod.
 
-The V1 should reduce manual setup work and make the local game environment,
-saves, and mod version easier to understand and maintain.
+V1 focuses on pre-game utilities, basic local environment management, remote
+modpack updates, and simple save management. It is not an anti-desync tool and
+does not modify the game's runtime.
 
-## Main Areas
+## V1 Scope
 
-### Environment
+### 1. Pre-game Environment
 
-- identify the local Torchlight II installation;
-- configure the directories used by the game and LogicSet;
-- validate that required paths and files are available;
-- present configuration problems in clear language.
+- configure the path to `Torchlight2.exe`;
+- configure the save or modsave directory;
+- configure the mods directory;
+- configure the path to `local_settings.txt`;
+- show a basic environment checklist;
+- validate that configured paths exist;
+- configure the UDP port in `local_settings.txt`;
+- back up `local_settings.txt` before editing it.
 
-### Saves
+### 2. Mod Update
 
-- discover local Torchlight II saves;
-- present save information without modifying files automatically;
-- provide the foundation for future safety and synchronization workflows.
+- read a remote `manifest.json` from the `LogicSet-modpack` repository;
+- show the installed modpack version and the remote version;
+- download the modpack `.zip`;
+- validate the downloaded archive using SHA256;
+- install or replace the modpack files.
 
-### Mod Update
+Updating the launcher itself is not part of V1.
 
-- identify the installed LogicSet version;
-- check whether a supported update is available;
-- present update information before any local change.
+### 3. Saves
 
-## Foundation Milestone
+- list character files found in the configured save or modsave directory;
+- allow a local alias for each character when the launcher cannot read the
+  character's real name;
+- move a character to an internal launcher trash directory;
+- restore a character from the internal launcher trash directory;
+- move the shared stash file to the internal launcher trash directory;
+- block destructive save and stash actions while `Torchlight2.exe` is running.
 
-The first implementation milestone contains only:
+V1 does not require advanced save parsing. Character entries may be represented
+by their filename and an optional local alias.
 
-- an Electron, React, TypeScript, and Vite project structure;
-- a secure Electron window with an isolated renderer;
-- navigation between Environment, Saves, and Mod Update;
-- placeholder content for all three pages;
-- typed service contracts in the main process;
-- shared types for future process communication;
-- a placeholder boundary for future local settings.
+### 4. Local Logging
 
-## Explicitly Not Implemented Yet
+The launcher must keep simple local logs for important actions, including:
 
-The foundation milestone does not include:
+- configured paths;
+- UDP port changes;
+- installed modpack updates;
+- characters moved to the internal trash directory;
+- shared stash files moved to the internal trash directory.
 
-- filesystem discovery or validation;
-- settings persistence;
-- save discovery or parsing;
-- mod update checks, downloads, or installation;
-- multiplayer desync checks;
-- snapshots or rollback;
-- packaging or an installer.
+Logs are local only. V1 does not include remote telemetry.
 
-## V1 Quality Requirements
+## Safety and Quality Requirements
 
 - the renderer must not have direct Node.js access;
 - privileged operations must remain in the main process;
 - communication across Electron processes must use typed contracts;
 - filesystem changes must require explicit user intent;
+- `local_settings.txt` must be backed up before modification;
+- destructive save and stash actions must be blocked while the game is running;
+- modpack downloads must pass SHA256 validation before installation;
 - errors must not unexpectedly close the application;
-- critical file operations must have focused automated tests when implemented.
+- critical file operations must have focused automated tests.
+
+## Out of Scope for V1
+
+- desync checker;
+- manual snapshots during gameplay;
+- automatic character rollback;
+- advanced save parsing;
+- Torchlight II memory reading;
+- DLL injection;
+- network proxy;
+- integrated VPN;
+- automatic launcher updates;
+- automatic character or stat correction;
+- detection of defeated bosses;
+- total playtime per character;
+- character level or class read directly from save files;
+- any system that modifies or attempts to control the game's internal runtime.
+
+## Future MVP+ Ideas
+
+- advanced character information:
+  - playtime;
+  - level;
+  - class;
+  - defeated bosses;
+  - current area;
+- save backup and rollback;
+- snapshot comparison;
+- possible desync checker;
+- bug report export;
+- automatic launcher updates;
+- stable, beta, and dev modpack channels.
+
+These items are future possibilities and are not V1 commitments.
+
+## Current Implementation Status
+
+The repository currently provides the application foundation:
+
+- Electron, React, TypeScript, and Vite project structure;
+- a secure Electron window with an isolated renderer;
+- navigation between Environment, Saves, and Mod Update;
+- typed service contracts in the main process;
+- shared types for process communication.
+
+The features listed in the V1 scope describe the target for V1 and may not all
+be implemented yet.
 
 ## Pending Decisions
 
-- supported Torchlight II distributions and install locations;
-- LogicSet manifest and update source;
-- local settings format and migration strategy;
-- save compatibility and backup rules;
+- supported Torchlight II distributions and default install locations;
+- exact `LogicSet-modpack` manifest schema and release URL convention;
+- local settings and alias persistence formats;
+- internal trash directory layout and retention rules;
 - packaging and distribution strategy;
 - application license.
