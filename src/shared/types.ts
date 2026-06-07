@@ -1,5 +1,8 @@
 export type NavigationPage = 'environment' | 'saves' | 'mod-update'
 
+export const DEFAULT_LOGICSET_MANIFEST_URL =
+  'https://raw.githubusercontent.com/Leon-nis/LogicSet-modpack/main/manifest.json'
+
 export interface AppInfo {
   readonly name: string
   readonly version: string

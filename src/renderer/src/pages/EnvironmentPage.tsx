@@ -10,6 +10,7 @@ import type {
   PathDialogKind,
   PathValidation
 } from '../../../shared/types'
+import { DEFAULT_LOGICSET_MANIFEST_URL } from '../../../shared/types'
 
 interface PathField {
   readonly key: GamePathKey
@@ -65,7 +66,7 @@ export const EnvironmentPage = (): React.JSX.Element => {
     useState<PathValidation>(emptyValidation)
   const [modUpdateSettings, setModUpdateSettings] =
     useState<ModUpdateSettings>({
-      manifestUrl: '',
+      manifestUrl: DEFAULT_LOGICSET_MANIFEST_URL,
       installedVersion: null
     })
   const [isSavedExecutableValid, setIsSavedExecutableValid] = useState(false)

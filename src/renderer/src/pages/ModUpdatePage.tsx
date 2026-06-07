@@ -3,10 +3,11 @@ import type {
   ModpackManifest,
   ModUpdateInfo
 } from '../../../shared/types'
+import { DEFAULT_LOGICSET_MANIFEST_URL } from '../../../shared/types'
 import { PageLayout } from '../components/PageLayout'
 
 const emptyInfo: ModUpdateInfo = {
-  manifestUrl: '',
+  manifestUrl: DEFAULT_LOGICSET_MANIFEST_URL,
   installedVersion: null,
   manifest: null
 }
@@ -19,7 +20,9 @@ export const ModUpdatePage = (): React.JSX.Element => {
     typeof window.logicSet.modUpdate?.saveManifestUrl === 'function' &&
     typeof window.logicSet.modUpdate?.check === 'function' &&
     typeof window.logicSet.modUpdate?.install === 'function'
-  const [manifestUrl, setManifestUrl] = useState('')
+  const [manifestUrl, setManifestUrl] = useState(
+    DEFAULT_LOGICSET_MANIFEST_URL
+  )
   const [info, setInfo] = useState<ModUpdateInfo>(emptyInfo)
   const [operation, setOperation] = useState<UpdateOperation>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -62,6 +65,30 @@ export const ModUpdatePage = (): React.JSX.Element => {
       result.success ? setMessage(result.message) : setError(result.message)
     } catch (saveError: unknown) {
       setError(formatError('Could not save the manifest URL.', saveError))
+    } finally {
+      setOperation(null)
+    }
+  }
+
+  const resetManifestUrl = async (): Promise<void> => {
+    setManifestUrl(DEFAULT_LOGICSET_MANIFEST_URL)
+    setOperation('saving')
+    setMessage(null)
+    setError(null)
+
+    try {
+      const result = await window.logicSet.modUpdate.saveManifestUrl({
+        manifestUrl: DEFAULT_LOGICSET_MANIFEST_URL
+      })
+      setInfo(result.info)
+      setManifestUrl(result.info.manifestUrl)
+      result.success
+        ? setMessage('Manifest URL reset to the LogicSet stable default.')
+        : setError(result.message)
+    } catch (resetError: unknown) {
+      setError(
+        formatError('Could not reset the manifest URL.', resetError)
+      )
     } finally {
       setOperation(null)
     }
@@ -124,7 +151,7 @@ export const ModUpdatePage = (): React.JSX.Element => {
               type="url"
               value={manifestUrl}
               disabled={isLoading || isBusy || !supportsModUpdateApi}
-              placeholder="https://example.com/manifest.json"
+              placeholder={DEFAULT_LOGICSET_MANIFEST_URL}
               spellCheck={false}
               onChange={(event) => {
                 setManifestUrl(event.target.value)
@@ -132,6 +159,14 @@ export const ModUpdatePage = (): React.JSX.Element => {
                 setError(null)
               }}
             />
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={isLoading || isBusy || !supportsModUpdateApi}
+              onClick={() => void resetManifestUrl()}
+            >
+              Reset to default
+            </button>
             <button
               className="secondary-button"
               type="button"

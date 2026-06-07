@@ -25,6 +25,8 @@ does not modify the game's runtime.
 ### 2. Mod Update
 
 - read a remote `manifest.json` from the `LogicSet-modpack` repository;
+- use the stable LogicSet manifest URL by default, while allowing a manual URL
+  override for development and testing;
 - show the installed modpack version and the remote version;
 - download the modpack `.zip`;
 - validate the downloaded archive using SHA256;
@@ -119,7 +121,7 @@ be implemented yet.
 ## Pending Decisions
 
 - supported Torchlight II distributions and default install locations;
-- exact `LogicSet-modpack` manifest schema and release URL convention;
+- future manifest schema migrations and release URL conventions;
 - local settings and alias persistence formats;
 - internal trash directory layout and retention rules;
 - packaging and distribution strategy;

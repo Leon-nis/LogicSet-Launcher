@@ -1,4 +1,7 @@
-import type { LocalSettings } from '../../shared/types'
+import {
+  DEFAULT_LOGICSET_MANIFEST_URL,
+  type LocalSettings
+} from '../../shared/types'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
@@ -32,17 +35,26 @@ export class JsonLocalSettingsService implements LocalSettingsService {
   }
 
   async save(settings: LocalSettings): Promise<LocalSettings> {
-    if (!isLocalSettings(settings)) {
+    const normalizedSettings = normalizeLocalSettings(
+      settings,
+      this.defaultSettings
+    )
+
+    if (!isLocalSettings(normalizedSettings)) {
       throw new Error('Invalid local settings.')
     }
 
     await mkdir(dirname(this.configPath), { recursive: true })
 
     const temporaryPath = `${this.configPath}.tmp`
-    await writeFile(temporaryPath, `${JSON.stringify(settings, null, 2)}\n`, 'utf8')
+    await writeFile(
+      temporaryPath,
+      `${JSON.stringify(normalizedSettings, null, 2)}\n`,
+      'utf8'
+    )
     await rename(temporaryPath, this.configPath)
 
-    return settings
+    return normalizedSettings
   }
 }
 
@@ -73,7 +85,16 @@ const normalizeLocalSettings = (
   defaultSettings: LocalSettings
 ): LocalSettings => {
   if (isLocalSettings(value)) {
-    return value
+    return {
+      ...value,
+      modUpdate: {
+        ...value.modUpdate,
+        manifestUrl:
+          value.modUpdate.manifestUrl.trim() === ''
+            ? DEFAULT_LOGICSET_MANIFEST_URL
+            : value.modUpdate.manifestUrl
+      }
+    }
   }
 
   if (!isRecord(value) || value.schemaVersion !== 1) {
@@ -103,9 +124,10 @@ const normalizeLocalSettings = (
     },
     modUpdate: {
       manifestUrl:
-        typeof modUpdate.manifestUrl === 'string'
+        typeof modUpdate.manifestUrl === 'string' &&
+        modUpdate.manifestUrl.trim() !== ''
           ? modUpdate.manifestUrl
-          : defaultSettings.modUpdate.manifestUrl,
+          : DEFAULT_LOGICSET_MANIFEST_URL,
       installedVersion:
         typeof modUpdate.installedVersion === 'string' ||
         modUpdate.installedVersion === null

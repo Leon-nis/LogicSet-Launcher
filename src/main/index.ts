@@ -11,6 +11,7 @@ import type {
   TrashSaveRequest,
   UdpPortApplyRequest
 } from '../shared/types'
+import { DEFAULT_LOGICSET_MANIFEST_URL } from '../shared/types'
 import { TorchlightGameLaunchService } from './services/game-launch.service'
 import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
@@ -55,7 +56,7 @@ const createDefaultSettings = (): LocalSettings => {
       localSettingsPath: join(torchlightDocumentsPath, 'local_settings.txt')
     },
     modUpdate: {
-      manifestUrl: '',
+      manifestUrl: DEFAULT_LOGICSET_MANIFEST_URL,
       installedVersion: null
     }
   }

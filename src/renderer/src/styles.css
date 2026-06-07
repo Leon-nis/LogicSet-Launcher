@@ -851,7 +851,7 @@ button:focus-visible {
 .manifest-url-row {
   display: grid;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   gap: 10px;
 }
 

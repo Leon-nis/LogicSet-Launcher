@@ -8,6 +8,10 @@ environment setup, remote modpack updates, simple save management, and local
 logging. Anti-desync features, save rollback, and advanced save parsing are not
 part of V1.
 
+V1 uses the stable LogicSet modpack manifest by default:
+`https://raw.githubusercontent.com/Leon-nis/LogicSet-modpack/main/manifest.json`.
+The URL remains editable in the Mod Update page for development and testing.
+
 ## Stack
 
 - Electron
