@@ -12,6 +12,7 @@ import { TorchlightGameLaunchService } from './services/game-launch.service'
 import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
 import { SystemProcessService } from './services/process.service'
+import { DefaultSaveManagerService } from './services/save-manager.service'
 import { FileTorchlightSettingsService } from './services/torchlight-settings.service'
 
 const ipcChannels = {
@@ -21,7 +22,9 @@ const ipcChannels = {
   browsePath: 'environment:browse-path',
   readUdpPort: 'environment:read-udp-port',
   applyUdpPort: 'environment:apply-udp-port',
-  launchGame: 'environment:launch-game'
+  launchGame: 'environment:launch-game',
+  listSaves: 'saves:list',
+  openSavesFolder: 'saves:open-folder'
 } as const
 
 const createDefaultSettings = (): LocalSettings => {
@@ -152,6 +155,7 @@ const registerEnvironmentHandlers = (): void => {
     processService,
     logService
   )
+  const saveManagerService = new DefaultSaveManagerService(settingsService)
 
   ipcMain.handle(ipcChannels.loadConfig, () => settingsService.load())
   ipcMain.handle(
@@ -205,6 +209,10 @@ const registerEnvironmentHandlers = (): void => {
     }
   )
   ipcMain.handle(ipcChannels.launchGame, () => gameLaunchService.launch())
+  ipcMain.handle(ipcChannels.listSaves, () => saveManagerService.listSaves())
+  ipcMain.handle(ipcChannels.openSavesFolder, () =>
+    saveManagerService.openSavesFolder()
+  )
 }
 
 const createMainWindow = (): BrowserWindow => {

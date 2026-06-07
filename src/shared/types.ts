@@ -67,10 +67,27 @@ export interface GameLaunchResult {
   readonly errorMessage?: string
 }
 
-export interface SaveSummary {
-  readonly id: string
-  readonly name: string
-  readonly updatedAt: string
+export type SaveFileKind = 'character' | 'shared_stash' | 'unknown'
+
+export interface SaveFile {
+  readonly fileName: string
+  readonly fullPath: string
+  readonly kind: SaveFileKind
+  readonly sizeBytes: number
+  readonly modifiedAt: string
+}
+
+export interface SaveListResult {
+  readonly success: boolean
+  readonly saves: readonly SaveFile[]
+  readonly message?: string
+  readonly errorCode?: string
+}
+
+export interface OpenSavesFolderResult {
+  readonly success: boolean
+  readonly message: string
+  readonly errorCode?: string
 }
 
 export type ModUpdateState =
@@ -98,5 +115,9 @@ export interface LogicSetApi {
       request: UdpPortApplyRequest
     ) => Promise<UdpPortApplyResult>
     readonly launchGame: () => Promise<GameLaunchResult>
+  }
+  readonly saves: {
+    readonly list: () => Promise<SaveListResult>
+    readonly openFolder: () => Promise<OpenSavesFolderResult>
   }
 }

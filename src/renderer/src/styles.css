@@ -242,6 +242,7 @@ button:focus-visible {
 .placeholder-card,
 .environment-panel,
 .game-launch-panel,
+.saves-panel,
 .udp-port-panel {
   min-width: 0;
 }
@@ -592,6 +593,171 @@ button:focus-visible {
   margin-top: 10px;
 }
 
+.saves-panel {
+  overflow: hidden;
+  border: 1px solid #232f3b;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #121a23, #0e151d);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
+}
+
+.saves-toolbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 26px;
+  border-bottom: 1px solid #202b36;
+}
+
+.saves-toolbar-copy {
+  min-width: 0;
+}
+
+.saves-toolbar h2 {
+  margin: 0 0 7px;
+  font-size: 20px;
+}
+
+.saves-toolbar p {
+  margin: 0;
+  color: #8f9baa;
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.saves-toolbar-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.saves-toolbar-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.saves-feedback {
+  min-width: 0;
+  min-height: 0;
+  padding-inline: 26px;
+}
+
+.saves-feedback:not(:empty) {
+  padding-block: 14px;
+  border-bottom: 1px solid #202b36;
+}
+
+.saves-table-wrapper {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.saves-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.saves-table th,
+.saves-table td {
+  padding: 15px 18px;
+  border-bottom: 1px solid #1d2833;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.saves-table th {
+  color: #768494;
+  background: #0e151d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.saves-table th:nth-child(1) {
+  width: 150px;
+}
+
+.saves-table th:nth-child(3) {
+  width: 110px;
+}
+
+.saves-table th:nth-child(4) {
+  width: 190px;
+}
+
+.saves-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.saves-table td {
+  color: #b6c0cb;
+  font-size: 13px;
+}
+
+.save-file-name {
+  color: #e3e9ef !important;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.save-kind {
+  display: inline-flex;
+  padding: 5px 8px;
+  border: 1px solid #354452;
+  border-radius: 999px;
+  color: #aeb9c5;
+  background: #17212a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.save-kind[data-kind="character"] {
+  border-color: #306152;
+  color: #87ddc4;
+  background: #172a24;
+}
+
+.save-kind[data-kind="shared_stash"] {
+  border-color: #4b5271;
+  color: #b8c0f0;
+  background: #1d2031;
+}
+
+.saves-empty-state {
+  display: grid;
+  min-height: 190px;
+  place-content: center;
+  padding: 32px;
+  color: #83909f;
+  text-align: center;
+}
+
+.saves-empty-state strong {
+  color: #d4dce4;
+  font-size: 16px;
+}
+
+.saves-empty-state p {
+  max-width: 440px;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.saves-empty-state.error strong {
+  color: #f1abab;
+}
+
 @media (max-width: 1100px) {
   .app-shell {
     grid-template-columns: 92px minmax(0, 1fr);
@@ -670,6 +836,54 @@ button:focus-visible {
 
   .play-button {
     width: 100%;
+  }
+
+  .saves-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saves-toolbar-actions,
+  .saves-toolbar-actions button {
+    width: 100%;
+  }
+
+  .saves-table,
+  .saves-table tbody,
+  .saves-table tr,
+  .saves-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .saves-table thead {
+    display: none;
+  }
+
+  .saves-table tr {
+    padding: 12px 18px;
+    border-bottom: 1px solid #202b36;
+  }
+
+  .saves-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .saves-table td {
+    display: grid;
+    grid-template-columns: minmax(105px, 0.35fr) minmax(0, 1fr);
+    gap: 16px;
+    padding: 7px 0;
+    border: 0;
+  }
+
+  .saves-table td::before {
+    color: #768494;
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 }
 

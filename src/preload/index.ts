@@ -19,6 +19,10 @@ const logicSetApi: LogicSetApi = {
     applyUdpPort: (request) =>
       ipcRenderer.invoke('environment:apply-udp-port', request),
     launchGame: () => ipcRenderer.invoke('environment:launch-game')
+  },
+  saves: {
+    list: () => ipcRenderer.invoke('saves:list'),
+    openFolder: () => ipcRenderer.invoke('saves:open-folder')
   }
 }
 
