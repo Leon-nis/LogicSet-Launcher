@@ -241,6 +241,7 @@ button:focus-visible {
 .page-body,
 .placeholder-card,
 .environment-panel,
+.game-launch-panel,
 .udp-port-panel {
   min-width: 0;
 }
@@ -297,6 +298,65 @@ button:focus-visible {
   border-radius: 16px;
   background: linear-gradient(145deg, #121a23, #0e151d);
   box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
+}
+
+.game-launch-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 18px;
+  padding: 24px 26px;
+  border: 1px solid #28544f;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 100% 0%, rgb(69 157 137 / 18%), transparent 45%),
+    linear-gradient(145deg, #13201f, #0e171b);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
+}
+
+.game-launch-copy {
+  min-width: 0;
+}
+
+.game-launch-copy h2 {
+  margin: 9px 0 8px;
+  font-size: 22px;
+}
+
+.game-launch-copy > p {
+  margin: 0;
+  color: #8f9baa;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.game-launch-feedback {
+  min-width: 0;
+  min-height: 20px;
+  margin-top: 10px;
+}
+
+.play-button {
+  flex: none;
+  min-width: 178px;
+  padding: 12px 18px;
+  border: 1px solid #69d8ba;
+  border-radius: 10px;
+  color: #06110e;
+  background: #74dfc1;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.play-button:hover {
+  background: #8ae7ce;
+}
+
+.play-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .environment-loading {
@@ -601,6 +661,15 @@ button:focus-visible {
 
   .udp-port-input-row {
     grid-template-columns: 1fr;
+  }
+
+  .game-launch-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .play-button {
+    width: 100%;
   }
 }
 

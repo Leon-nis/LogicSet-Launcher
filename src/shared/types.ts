@@ -54,6 +54,19 @@ export type UdpPortApplyResult =
       readonly message: string
     }
 
+export type GameLaunchErrorCode =
+  | 'executable-not-found'
+  | 'game-already-running'
+  | 'launch-failed'
+  | string
+
+export interface GameLaunchResult {
+  readonly success: boolean
+  readonly message: string
+  readonly errorCode?: GameLaunchErrorCode
+  readonly errorMessage?: string
+}
+
 export interface SaveSummary {
   readonly id: string
   readonly name: string
@@ -84,5 +97,6 @@ export interface LogicSetApi {
     readonly applyUdpPort: (
       request: UdpPortApplyRequest
     ) => Promise<UdpPortApplyResult>
+    readonly launchGame: () => Promise<GameLaunchResult>
   }
 }

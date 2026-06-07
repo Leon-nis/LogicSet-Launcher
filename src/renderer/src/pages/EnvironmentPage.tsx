@@ -62,8 +62,12 @@ export const EnvironmentPage = (): React.JSX.Element => {
   const [paths, setPaths] = useState<GamePaths>(emptyPaths)
   const [validation, setValidation] =
     useState<PathValidation>(emptyValidation)
+  const [isSavedExecutableValid, setIsSavedExecutableValid] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isLaunching, setIsLaunching] = useState(false)
+  const [launchMessage, setLaunchMessage] = useState<string | null>(null)
+  const [launchError, setLaunchError] = useState<string | null>(null)
   const [udpPort, setUdpPort] = useState('')
   const [isUdpPortLoading, setIsUdpPortLoading] = useState(false)
   const [isUdpPortApplying, setIsUdpPortApplying] = useState(false)
@@ -76,6 +80,7 @@ export const EnvironmentPage = (): React.JSX.Element => {
     const nextValidation =
       await window.logicSet.environment.validatePaths(nextPaths)
     setValidation(nextValidation)
+    return nextValidation
   }, [])
 
   const loadUdpPort = useCallback(async (localSettingsPath: string) => {
@@ -112,10 +117,13 @@ export const EnvironmentPage = (): React.JSX.Element => {
       try {
         const settings = await window.logicSet.environment.loadConfig()
         setPaths(settings.gamePaths)
-        await Promise.all([
+        const [loadedValidation] = await Promise.all([
           refreshValidation(settings.gamePaths),
           loadUdpPort(settings.gamePaths.localSettingsPath)
         ])
+        setIsSavedExecutableValid(
+          loadedValidation.torchlightExecutablePath
+        )
       } catch {
         setError('Could not load the local environment configuration.')
       } finally {
@@ -184,12 +192,48 @@ export const EnvironmentPage = (): React.JSX.Element => {
       const savedSettings =
         await window.logicSet.environment.saveConfig(settings)
       setPaths(savedSettings.gamePaths)
-      await refreshValidation(savedSettings.gamePaths)
+      const savedValidation =
+        await refreshValidation(savedSettings.gamePaths)
+      setIsSavedExecutableValid(
+        savedValidation.torchlightExecutablePath
+      )
       setMessage('Environment configuration saved.')
     } catch {
       setError('Could not save the local environment configuration.')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const launchGame = async (): Promise<void> => {
+    setIsLaunching(true)
+    setLaunchMessage(null)
+    setLaunchError(null)
+
+    try {
+      const result = await window.logicSet.environment.launchGame()
+
+      if (!result.success) {
+        const debugDetails = [result.errorCode, result.errorMessage]
+          .filter(Boolean)
+          .join(' - ')
+        setLaunchError(
+          debugDetails === ''
+            ? result.message
+            : `${result.message} ${debugDetails}`
+        )
+        return
+      }
+
+      setLaunchMessage(result.message)
+    } catch (error: unknown) {
+      setLaunchError(
+        `Could not launch Torchlight II. ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
+    } finally {
+      setIsLaunching(false)
     }
   }
 
@@ -239,6 +283,38 @@ export const EnvironmentPage = (): React.JSX.Element => {
       title="Environment"
       description="Configure the local Torchlight II installation and the paths used by LogicSet."
     >
+      {!isLoading && (
+        <section className="game-launch-panel">
+          <div className="game-launch-copy">
+            <span className="eyebrow">Ready to play</span>
+            <h2>Launch Torchlight II</h2>
+            <p>
+              Starts the game using the saved executable path. Save path
+              changes before launching.
+            </p>
+            <div className="game-launch-feedback" aria-live="polite">
+              {isLaunching && (
+                <p className="form-message">Launching Torchlight II...</p>
+              )}
+              {launchMessage && (
+                <p className="form-message success">{launchMessage}</p>
+              )}
+              {launchError && (
+                <p className="form-message error">{launchError}</p>
+              )}
+            </div>
+          </div>
+          <button
+            className="play-button"
+            type="button"
+            disabled={!isSavedExecutableValid || isLaunching}
+            onClick={() => void launchGame()}
+          >
+            {isLaunching ? 'Launching...' : 'Play Torchlight II'}
+          </button>
+        </section>
+      )}
+
       <section className="environment-panel" aria-busy={isLoading}>
         {isLoading ? (
           <p className="environment-loading">Loading configuration...</p>

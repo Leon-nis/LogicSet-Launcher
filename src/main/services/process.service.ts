@@ -13,12 +13,27 @@ export class SystemProcessService implements ProcessService {
       return false
     }
 
-    const { stdout } = await execFileAsync(
-      'tasklist.exe',
-      ['/FI', 'IMAGENAME eq Torchlight2.exe', '/FO', 'CSV', '/NH'],
-      { encoding: 'utf8', windowsHide: true }
-    )
+    try {
+      const { stdout } = await execFileAsync(
+        'tasklist.exe',
+        ['/FI', 'IMAGENAME eq Torchlight2.exe', '/FO', 'CSV', '/NH'],
+        { encoding: 'utf8', windowsHide: true }
+      )
 
-    return stdout.toLowerCase().includes('"torchlight2.exe"')
+      return stdout.toLowerCase().includes('"torchlight2.exe"')
+    } catch {
+      const { stdout } = await execFileAsync(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          "if (Get-Process -Name 'Torchlight2' -ErrorAction SilentlyContinue) { 'running' } else { 'not-running' }"
+        ],
+        { encoding: 'utf8', windowsHide: true }
+      )
+
+      return stdout.trim().toLowerCase() === 'running'
+    }
   }
 }

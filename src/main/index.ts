@@ -8,6 +8,7 @@ import type {
   PathValidation,
   UdpPortApplyRequest
 } from '../shared/types'
+import { TorchlightGameLaunchService } from './services/game-launch.service'
 import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
 import { SystemProcessService } from './services/process.service'
@@ -19,7 +20,8 @@ const ipcChannels = {
   validatePaths: 'environment:validate-paths',
   browsePath: 'environment:browse-path',
   readUdpPort: 'environment:read-udp-port',
-  applyUdpPort: 'environment:apply-udp-port'
+  applyUdpPort: 'environment:apply-udp-port',
+  launchGame: 'environment:launch-game'
 } as const
 
 const createDefaultSettings = (): LocalSettings => {
@@ -137,11 +139,18 @@ const registerEnvironmentHandlers = (): void => {
     join(app.getPath('userData'), 'config.json'),
     createDefaultSettings()
   )
+  const processService = new SystemProcessService()
+  const logService = new JsonLinesLocalLogService(
+    join(app.getPath('userData'), 'logicset.log')
+  )
   const torchlightSettingsService = new FileTorchlightSettingsService(
-    new SystemProcessService(),
-    new JsonLinesLocalLogService(
-      join(app.getPath('userData'), 'logicset.log')
-    )
+    processService,
+    logService
+  )
+  const gameLaunchService = new TorchlightGameLaunchService(
+    settingsService,
+    processService,
+    logService
   )
 
   ipcMain.handle(ipcChannels.loadConfig, () => settingsService.load())
@@ -195,6 +204,7 @@ const registerEnvironmentHandlers = (): void => {
       )
     }
   )
+  ipcMain.handle(ipcChannels.launchGame, () => gameLaunchService.launch())
 }
 
 const createMainWindow = (): BrowserWindow => {
