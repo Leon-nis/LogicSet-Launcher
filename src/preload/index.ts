@@ -13,7 +13,11 @@ const logicSetApi: LogicSetApi = {
     validatePaths: (paths) =>
       ipcRenderer.invoke('environment:validate-paths', paths),
     browsePath: (kind) =>
-      ipcRenderer.invoke('environment:browse-path', kind)
+      ipcRenderer.invoke('environment:browse-path', kind),
+    readUdpPort: (localSettingsPath) =>
+      ipcRenderer.invoke('environment:read-udp-port', localSettingsPath),
+    applyUdpPort: (request) =>
+      ipcRenderer.invoke('environment:apply-udp-port', request)
   }
 }
 

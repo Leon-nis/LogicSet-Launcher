@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { PageHeader } from '../components/PageHeader'
+import { ButtonRow } from '../components/ButtonRow'
+import { FieldRow } from '../components/FieldRow'
+import { PageLayout } from '../components/PageLayout'
 import type {
   GamePathKey,
   GamePaths,
@@ -62,6 +64,11 @@ export const EnvironmentPage = (): React.JSX.Element => {
     useState<PathValidation>(emptyValidation)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [udpPort, setUdpPort] = useState('')
+  const [isUdpPortLoading, setIsUdpPortLoading] = useState(false)
+  const [isUdpPortApplying, setIsUdpPortApplying] = useState(false)
+  const [udpPortMessage, setUdpPortMessage] = useState<string | null>(null)
+  const [udpPortError, setUdpPortError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -71,12 +78,44 @@ export const EnvironmentPage = (): React.JSX.Element => {
     setValidation(nextValidation)
   }, [])
 
+  const loadUdpPort = useCallback(async (localSettingsPath: string) => {
+    setIsUdpPortLoading(true)
+    setUdpPortMessage(null)
+    setUdpPortError(null)
+
+    try {
+      const result =
+        await window.logicSet.environment.readUdpPort(localSettingsPath)
+
+      if (result.status === 'error') {
+        setUdpPort('')
+        setUdpPortError(result.message)
+        return
+      }
+
+      setUdpPort(result.port?.toString() ?? '')
+      setUdpPortMessage(
+        result.port === null
+          ? 'UDPORT is not present. Applying a port will add it to the file.'
+          : `Current file value: ${result.port}.`
+      )
+    } catch {
+      setUdpPort('')
+      setUdpPortError('Could not read the UDP port.')
+    } finally {
+      setIsUdpPortLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     const load = async (): Promise<void> => {
       try {
         const settings = await window.logicSet.environment.loadConfig()
         setPaths(settings.gamePaths)
-        await refreshValidation(settings.gamePaths)
+        await Promise.all([
+          refreshValidation(settings.gamePaths),
+          loadUdpPort(settings.gamePaths.localSettingsPath)
+        ])
       } catch {
         setError('Could not load the local environment configuration.')
       } finally {
@@ -85,12 +124,18 @@ export const EnvironmentPage = (): React.JSX.Element => {
     }
 
     void load()
-  }, [refreshValidation])
+  }, [loadUdpPort, refreshValidation])
 
   const updatePath = (key: GamePathKey, value: string): void => {
     setPaths((current) => ({ ...current, [key]: value }))
     setValidation((current) => ({ ...current, [key]: false }))
     setMessage(null)
+
+    if (key === 'localSettingsPath') {
+      setUdpPort('')
+      setUdpPortMessage(null)
+      setUdpPortError(null)
+    }
   }
 
   const browse = async (field: PathField): Promise<void> => {
@@ -108,8 +153,20 @@ export const EnvironmentPage = (): React.JSX.Element => {
       setPaths(nextPaths)
       setMessage(null)
       await refreshValidation(nextPaths)
+
+      if (field.key === 'localSettingsPath') {
+        await loadUdpPort(selectedPath)
+      }
     } catch {
       setError(`Could not select the path for ${field.label}.`)
+    }
+  }
+
+  const handlePathBlur = async (field: PathField): Promise<void> => {
+    await refreshValidation(paths)
+
+    if (field.key === 'localSettingsPath') {
+      await loadUdpPort(paths.localSettingsPath)
     }
   }
 
@@ -136,62 +193,83 @@ export const EnvironmentPage = (): React.JSX.Element => {
     }
   }
 
-  return (
-    <div className="page">
-      <PageHeader
-        eyebrow="Setup"
-        title="Environment"
-        description="Configure the local Torchlight II installation and the paths used by LogicSet."
-      />
+  const applyUdpPort = async (): Promise<void> => {
+    const parsedPort = Number(udpPort)
 
+    if (
+      udpPort.trim() === '' ||
+      !Number.isInteger(parsedPort) ||
+      parsedPort < 1024 ||
+      parsedPort > 65535
+    ) {
+      setUdpPortMessage(null)
+      setUdpPortError('UDP port must be between 1024 and 65535.')
+      return
+    }
+
+    setIsUdpPortApplying(true)
+    setUdpPortMessage(null)
+    setUdpPortError(null)
+
+    try {
+      const result = await window.logicSet.environment.applyUdpPort({
+        localSettingsPath: paths.localSettingsPath,
+        port: parsedPort
+      })
+
+      if (result.status === 'error') {
+        setUdpPortError(result.message)
+        return
+      }
+
+      setUdpPort(result.port.toString())
+      setUdpPortMessage(
+        `UDP port ${result.port} applied. Backup: ${result.backupPath}`
+      )
+    } catch {
+      setUdpPortError('Could not apply the UDP port.')
+    } finally {
+      setIsUdpPortApplying(false)
+    }
+  }
+
+  return (
+    <PageLayout
+      eyebrow="Setup"
+      title="Environment"
+      description="Configure the local Torchlight II installation and the paths used by LogicSet."
+    >
       <section className="environment-panel" aria-busy={isLoading}>
         {isLoading ? (
           <p className="environment-loading">Loading configuration...</p>
         ) : (
           <>
-            <div className="path-list">
+            <div className="field-list">
               {pathFields.map((field) => (
-                <div className="path-field" key={field.key}>
-                  <div className="path-field-heading">
-                    <div>
-                      <label htmlFor={field.key}>{field.label}</label>
-                      <p>{field.description}</p>
-                    </div>
-                    <span
-                      className="path-status"
-                      data-valid={validation[field.key]}
-                    >
-                      {validation[field.key] ? 'OK' : 'WARN'}
-                    </span>
-                  </div>
-                  <div className="path-input-row">
-                    <input
-                      id={field.key}
-                      type="text"
-                      value={paths[field.key]}
-                      onChange={(event) =>
-                        updatePath(field.key, event.target.value)
-                      }
-                      onBlur={() => void refreshValidation(paths)}
-                      spellCheck={false}
-                    />
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={() => void browse(field)}
-                    >
-                      Browse
-                    </button>
-                  </div>
-                </div>
+                <FieldRow
+                  key={field.key}
+                  id={field.key}
+                  label={field.label}
+                  description={field.description}
+                  value={paths[field.key]}
+                  isValid={validation[field.key]}
+                  onChange={(event) =>
+                    updatePath(field.key, event.target.value)
+                  }
+                  onBlur={() => void handlePathBlur(field)}
+                  onBrowse={() => void browse(field)}
+                />
               ))}
             </div>
 
-            <div className="environment-actions">
-              <div aria-live="polite">
+            <ButtonRow
+              feedback={
+                <>
                 {message && <p className="form-message success">{message}</p>}
                 {error && <p className="form-message error">{error}</p>}
-              </div>
+                </>
+              }
+            >
               <button
                 className="primary-button"
                 type="button"
@@ -200,10 +278,62 @@ export const EnvironmentPage = (): React.JSX.Element => {
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
-            </div>
+            </ButtonRow>
           </>
         )}
       </section>
-    </div>
+
+      {!isLoading && (
+        <section className="udp-port-panel">
+          <div className="udp-port-copy">
+            <span className="eyebrow">Local multiplayer</span>
+            <h2>UDP port</h2>
+            <p>
+              Read and update <code>UDPORT</code> in the configured{' '}
+              <code>local_settings.txt</code>. Torchlight II must be closed.
+            </p>
+          </div>
+
+          <div className="udp-port-controls">
+            <label htmlFor="udpPort">Port</label>
+            <div className="udp-port-input-row">
+              <input
+                id="udpPort"
+                type="number"
+                min="1024"
+                max="65535"
+                step="1"
+                value={udpPort}
+                disabled={isUdpPortLoading || isUdpPortApplying}
+                onChange={(event) => {
+                  setUdpPort(event.target.value)
+                  setUdpPortMessage(null)
+                  setUdpPortError(null)
+                }}
+              />
+              <button
+                className="primary-button"
+                type="button"
+                disabled={isUdpPortLoading || isUdpPortApplying}
+                onClick={() => void applyUdpPort()}
+              >
+                {isUdpPortApplying ? 'Applying...' : 'Apply port'}
+              </button>
+            </div>
+            <div className="udp-port-feedback" aria-live="polite">
+              {isUdpPortLoading && (
+                <p className="form-message">Reading current port...</p>
+              )}
+              {udpPortMessage && (
+                <p className="form-message success">{udpPortMessage}</p>
+              )}
+              {udpPortError && (
+                <p className="form-message error">{udpPortError}</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+    </PageLayout>
   )
 }

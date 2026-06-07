@@ -5,15 +5,21 @@ import type {
   GamePaths,
   LocalSettings,
   PathDialogKind,
-  PathValidation
+  PathValidation,
+  UdpPortApplyRequest
 } from '../shared/types'
+import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
+import { SystemProcessService } from './services/process.service'
+import { FileTorchlightSettingsService } from './services/torchlight-settings.service'
 
 const ipcChannels = {
   loadConfig: 'environment:load-config',
   saveConfig: 'environment:save-config',
   validatePaths: 'environment:validate-paths',
-  browsePath: 'environment:browse-path'
+  browsePath: 'environment:browse-path',
+  readUdpPort: 'environment:read-udp-port',
+  applyUdpPort: 'environment:apply-udp-port'
 } as const
 
 const createDefaultSettings = (): LocalSettings => {
@@ -90,6 +96,20 @@ const isPathDialogKind = (value: unknown): value is PathDialogKind =>
   value === 'mods-directory' ||
   value === 'local-settings'
 
+const isUdpPortApplyRequest = (
+  value: unknown
+): value is UdpPortApplyRequest => {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const request = value as Record<string, unknown>
+  return (
+    typeof request.localSettingsPath === 'string' &&
+    typeof request.port === 'number'
+  )
+}
+
 const showPathDialog = async (
   kind: PathDialogKind,
   parentWindow: BrowserWindow | null
@@ -116,6 +136,12 @@ const registerEnvironmentHandlers = (): void => {
   const settingsService = new JsonLocalSettingsService(
     join(app.getPath('userData'), 'config.json'),
     createDefaultSettings()
+  )
+  const torchlightSettingsService = new FileTorchlightSettingsService(
+    new SystemProcessService(),
+    new JsonLinesLocalLogService(
+      join(app.getPath('userData'), 'logicset.log')
+    )
   )
 
   ipcMain.handle(ipcChannels.loadConfig, () => settingsService.load())
@@ -146,13 +172,36 @@ const registerEnvironmentHandlers = (): void => {
       )
     }
   )
+  ipcMain.handle(
+    ipcChannels.readUdpPort,
+    (_event, localSettingsPath: unknown) => {
+      if (typeof localSettingsPath !== 'string') {
+        throw new Error('Invalid local settings path.')
+      }
+
+      return torchlightSettingsService.readUdpPort(localSettingsPath)
+    }
+  )
+  ipcMain.handle(
+    ipcChannels.applyUdpPort,
+    (_event, request: unknown) => {
+      if (!isUdpPortApplyRequest(request)) {
+        throw new Error('Invalid UDP port request.')
+      }
+
+      return torchlightSettingsService.applyUdpPort(
+        request.localSettingsPath,
+        request.port
+      )
+    }
+  )
 }
 
 const createMainWindow = (): BrowserWindow => {
   const mainWindow = new BrowserWindow({
     width: 1120,
     height: 720,
-    minWidth: 880,
+    minWidth: 820,
     minHeight: 600,
     show: false,
     backgroundColor: '#0b1017',

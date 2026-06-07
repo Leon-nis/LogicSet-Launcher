@@ -33,6 +33,27 @@ export interface LocalSettings {
   readonly gamePaths: GamePaths
 }
 
+export type UdpPortReadResult =
+  | { readonly status: 'success'; readonly port: number | null }
+  | { readonly status: 'error'; readonly message: string }
+
+export interface UdpPortApplyRequest {
+  readonly localSettingsPath: string
+  readonly port: number
+}
+
+export type UdpPortApplyResult =
+  | {
+      readonly status: 'success'
+      readonly port: number
+      readonly backupPath: string
+    }
+  | {
+      readonly status: 'error'
+      readonly code: 'invalid-port' | 'game-running' | 'file-error'
+      readonly message: string
+    }
+
 export interface SaveSummary {
   readonly id: string
   readonly name: string
@@ -57,5 +78,11 @@ export interface LogicSetApi {
     readonly saveConfig: (settings: LocalSettings) => Promise<LocalSettings>
     readonly validatePaths: (paths: GamePaths) => Promise<PathValidation>
     readonly browsePath: (kind: PathDialogKind) => Promise<string | null>
+    readonly readUdpPort: (
+      localSettingsPath: string
+    ) => Promise<UdpPortReadResult>
+    readonly applyUdpPort: (
+      request: UdpPortApplyRequest
+    ) => Promise<UdpPortApplyResult>
   }
 }
