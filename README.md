@@ -1,45 +1,71 @@
 # LogicSet Launcher
 
-O LogicSet Launcher e um aplicativo para organizar e iniciar, em um unico
-lugar, os recursos que fazem parte do ambiente LogicSet.
+Desktop utility for managing a modded Torchlight II multiplayer environment
+focused on the LogicSet mod.
 
-> Status: planejamento da primeira versao.
+The project is currently an application shell. Filesystem operations, save
+management, mod updates, desync checks, and rollback workflows are intentionally
+not implemented yet.
 
-## Objetivo
+## Stack
 
-Entregar uma experiencia simples para localizar e abrir aplicativos, ferramentas
-e outros recursos cadastrados localmente, sem exigir conta ou conexao com
-servicos externos.
+- Electron
+- React
+- TypeScript
+- Vite, through electron-vite
 
-## V1
+## Requirements
 
-A primeira versao deve incluir:
+- Node.js 20.19 or newer
+- npm 10 or newer
 
-- catalogo local de itens;
-- busca por nome;
-- itens favoritos;
-- abertura do recurso selecionado;
-- persistencia local das configuracoes;
-- mensagens claras para caminhos invalidos ou falhas de execucao.
+## Development
 
-Os requisitos, limites e criterios de aceite estao em
-[docs/V1_SCOPE.md](docs/V1_SCOPE.md).
+Install dependencies:
 
-## Desenvolvimento
-
-A stack, a arquitetura e os comandos de desenvolvimento ainda serao definidos.
-Essas decisoes devem priorizar uma distribuicao simples e uma boa experiencia em
-desktop.
-
-## Estrutura
-
-```text
-LogicSet-Launcher/
-|-- docs/
-|   `-- V1_SCOPE.md
-`-- README.md
+```bash
+npm install
 ```
 
-## Licenca
+Start the Vite development server and Electron:
 
-A licenca do projeto ainda nao foi definida.
+```bash
+npm run dev
+```
+
+Other available commands:
+
+```bash
+npm run typecheck
+npm run build
+npm run preview
+```
+
+## Structure
+
+```text
+src/
+|-- main/
+|   |-- services/
+|   `-- index.ts
+|-- preload/
+|   `-- index.ts
+|-- renderer/
+|   `-- src/
+|       |-- components/
+|       |-- pages/
+|       `-- App.tsx
+`-- shared/
+    `-- types.ts
+```
+
+- `main` owns desktop lifecycle and future operating-system integrations.
+- `preload` is the controlled bridge between Electron and the interface.
+- `renderer` contains the React application.
+- `shared` contains contracts that can be used across process boundaries.
+
+See [docs/V1_SCOPE.md](docs/V1_SCOPE.md) for the initial product scope.
+
+## License
+
+The project license has not been defined yet.

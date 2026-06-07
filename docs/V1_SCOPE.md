@@ -1,87 +1,72 @@
-# Escopo da V1
+# V1 Scope
 
-## Visao geral
+## Overview
 
-A V1 do LogicSet Launcher sera um aplicativo desktop capaz de manter um catalogo
-local de recursos e inicia-los por uma interface unica.
+LogicSet Launcher is a desktop utility for players using Torchlight II modded
+multiplayer with the LogicSet mod.
 
-O foco desta versao e validar o fluxo principal: cadastrar, encontrar e abrir um
-item com o menor numero possivel de passos.
+The V1 should reduce manual setup work and make the local game environment,
+saves, and mod version easier to understand and maintain.
 
-## Publico inicial
+## Main Areas
 
-Pessoas que utilizam ferramentas do ambiente LogicSet e querem acesso rapido a
-elas a partir de um unico ponto.
+### Environment
 
-## Funcionalidades
+- identify the local Torchlight II installation;
+- configure the directories used by the game and LogicSet;
+- validate that required paths and files are available;
+- present configuration problems in clear language.
 
-### Catalogo
+### Saves
 
-- listar os itens cadastrados;
-- exibir nome, descricao curta e icone quando disponivel;
-- cadastrar um item informando nome e caminho local;
-- editar e remover itens cadastrados;
-- manter os dados apos fechar o aplicativo.
+- discover local Torchlight II saves;
+- present save information without modifying files automatically;
+- provide the foundation for future safety and synchronization workflows.
 
-### Navegacao
+### Mod Update
 
-- buscar itens por nome;
-- marcar e desmarcar favoritos;
-- apresentar favoritos com destaque;
-- informar quando uma busca nao tiver resultados.
+- identify the installed LogicSet version;
+- check whether a supported update is available;
+- present update information before any local change.
 
-### Execucao
+## Foundation Milestone
 
-- abrir o arquivo, executavel ou atalho associado ao item;
-- detectar caminhos inexistentes antes da tentativa de abertura;
-- apresentar uma mensagem compreensivel quando a execucao falhar.
+The first implementation milestone contains only:
 
-### Configuracoes
+- an Electron, React, TypeScript, and Vite project structure;
+- a secure Electron window with an isolated renderer;
+- navigation between Environment, Saves, and Mod Update;
+- placeholder content for all three pages;
+- typed service contracts in the main process;
+- shared types for future process communication;
+- a placeholder boundary for future local settings.
 
-- armazenar as preferencias localmente;
-- permitir restaurar as preferencias padrao;
-- funcionar sem conta e sem conexao com a internet.
+## Explicitly Not Implemented Yet
 
-## Requisitos nao funcionais
+The foundation milestone does not include:
 
-- interface adequada para uso em desktop;
-- inicializacao e navegacao responsivas para um catalogo pequeno;
-- dados do usuario armazenados fora dos arquivos da aplicacao;
-- erros tratados sem encerrar inesperadamente o aplicativo;
-- processo de instalacao e primeira execucao documentado.
+- filesystem discovery or validation;
+- settings persistence;
+- save discovery or parsing;
+- mod update checks, downloads, or installation;
+- multiplayer desync checks;
+- snapshots or rollback;
+- packaging or an installer.
 
-## Fora do escopo
+## V1 Quality Requirements
 
-Nao fazem parte da V1:
+- the renderer must not have direct Node.js access;
+- privileged operations must remain in the main process;
+- communication across Electron processes must use typed contracts;
+- filesystem changes must require explicit user intent;
+- errors must not unexpectedly close the application;
+- critical file operations must have focused automated tests when implemented.
 
-- autenticacao e perfis online;
-- sincronizacao em nuvem;
-- loja ou marketplace;
-- sistema de plugins;
-- atualizacao automatica de aplicativos cadastrados;
-- download e instalacao de ferramentas;
-- telemetria;
-- suporte obrigatorio a multiplos sistemas operacionais;
-- integracoes remotas que dependam de APIs externas.
+## Pending Decisions
 
-## Criterios de aceite
-
-A V1 sera considerada concluida quando:
-
-1. um usuario puder cadastrar um item local;
-2. o item continuar disponivel apos reiniciar o launcher;
-3. o usuario puder encontra-lo pela busca e marca-lo como favorito;
-4. o launcher puder abrir um item com caminho valido;
-5. caminhos invalidos e falhas de execucao forem apresentados sem interromper o
-   aplicativo;
-6. os fluxos principais tiverem testes automatizados;
-7. houver instrucoes de instalacao, execucao e uso.
-
-## Decisoes pendentes
-
-- sistemas operacionais suportados;
-- stack e framework de interface;
-- formato de persistencia local;
-- identidade visual;
-- estrategia de empacotamento e distribuicao;
-- licenca do projeto.
+- supported Torchlight II distributions and install locations;
+- LogicSet manifest and update source;
+- local settings format and migration strategy;
+- save compatibility and backup rules;
+- packaging and distribution strategy;
+- application license.
