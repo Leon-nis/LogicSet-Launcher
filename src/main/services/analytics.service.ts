@@ -48,6 +48,11 @@ export class PostHogAnalyticsService implements AnalyticsService {
 
   async setEnabled(enabled: boolean): Promise<AnalyticsSettings> {
     const settings = await this.settingsService.load()
+
+    if (settings.analytics.enabled === enabled) {
+      return settings.analytics
+    }
+
     const savedSettings = await this.settingsService.save({
       ...settings,
       analytics: {
@@ -56,14 +61,25 @@ export class PostHogAnalyticsService implements AnalyticsService {
       }
     })
 
-    if (enabled && !settings.analytics.enabled) {
-      void this.trackEvent('analytics_enabled')
+    if (enabled) {
+      void this.captureEvent('analytics_enabled')
     }
 
     return savedSettings.analytics
   }
 
   async trackEvent(
+    event: AnalyticsEventName,
+    properties: AnalyticsEventProperties = {}
+  ): Promise<void> {
+    if (event === 'analytics_enabled') {
+      return
+    }
+
+    return this.captureEvent(event, properties)
+  }
+
+  private async captureEvent(
     event: AnalyticsEventName,
     properties: AnalyticsEventProperties = {}
   ): Promise<void> {
