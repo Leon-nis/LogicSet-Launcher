@@ -244,8 +244,66 @@ button:focus-visible {
 .game-launch-panel,
 .mod-update-panel,
 .saves-panel,
-.udp-port-panel {
+.udp-port-panel,
+.analytics-panel {
   min-width: 0;
+}
+
+.analytics-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-top: 18px;
+  padding: 24px 26px;
+  border: 1px solid #232f3b;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #121a23, #0e151d);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
+}
+
+.analytics-copy {
+  min-width: 0;
+}
+
+.analytics-copy h2 {
+  margin: 9px 0 8px;
+  font-size: 20px;
+}
+
+.analytics-copy > p:not(.form-message) {
+  max-width: 620px;
+  margin: 0;
+  color: #8f9baa;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.analytics-copy .form-message {
+  margin-top: 10px;
+}
+
+.analytics-toggle {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  color: #dbe3eb;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.analytics-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #65d2b3;
+  cursor: pointer;
+}
+
+.analytics-toggle input:disabled {
+  cursor: wait;
 }
 
 .placeholder-card {
@@ -1016,6 +1074,11 @@ button:focus-visible {
 
   .game-launch-panel {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .analytics-panel {
+    align-items: flex-start;
     flex-direction: column;
   }
 

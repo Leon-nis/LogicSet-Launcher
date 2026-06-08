@@ -15,10 +15,17 @@ export const App = (): React.JSX.Element => {
   const [activePage, setActivePage] =
     useState<NavigationPage>('environment')
   const ActivePage = pages[activePage]
+  const navigate = (page: NavigationPage): void => {
+    if (page === 'mod-update' && activePage !== page) {
+      void window.logicSet.analytics.trackEvent('mod_update_tab_opened')
+    }
+
+    setActivePage(page)
+  }
 
   return (
     <div className="app-shell">
-      <Sidebar activePage={activePage} onNavigate={setActivePage} />
+      <Sidebar activePage={activePage} onNavigate={navigate} />
       <main className="main-content">
         <ActivePage />
       </main>

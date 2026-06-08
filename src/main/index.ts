@@ -1,7 +1,10 @@
 import { access } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
 import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import type {
+  AnalyticsEventName,
+  AnalyticsEventProperties,
   GamePaths,
   LocalSettings,
   PathDialogKind,
@@ -12,6 +15,7 @@ import type {
   UdpPortApplyRequest
 } from '../shared/types'
 import { DEFAULT_LOGICSET_MANIFEST_URL } from '../shared/types'
+import { PostHogAnalyticsService } from './services/analytics.service'
 import { TorchlightGameLaunchService } from './services/game-launch.service'
 import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
@@ -36,7 +40,10 @@ const ipcChannels = {
   getModUpdateInfo: 'mod-update:get-info',
   saveManifestUrl: 'mod-update:save-manifest-url',
   checkModUpdate: 'mod-update:check',
-  installModUpdate: 'mod-update:install'
+  installModUpdate: 'mod-update:install',
+  getAnalyticsSettings: 'analytics:get-settings',
+  setAnalyticsEnabled: 'analytics:set-enabled',
+  trackAnalyticsEvent: 'analytics:track-event'
 } as const
 
 const createDefaultSettings = (): LocalSettings => {
@@ -58,6 +65,10 @@ const createDefaultSettings = (): LocalSettings => {
     modUpdate: {
       manifestUrl: DEFAULT_LOGICSET_MANIFEST_URL,
       installedVersion: null
+    },
+    analytics: {
+      enabled: false,
+      anonymousId: randomUUID()
     }
   }
 }
@@ -148,6 +159,9 @@ const isSaveManifestUrlRequest = (
   value !== null &&
   typeof (value as Record<string, unknown>).manifestUrl === 'string'
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
 const showPathDialog = async (
   kind: PathDialogKind,
   parentWindow: BrowserWindow | null
@@ -170,10 +184,16 @@ const showPathDialog = async (
   return result.canceled ? null : (result.filePaths[0] ?? null)
 }
 
-const registerEnvironmentHandlers = (): void => {
+const registerEnvironmentHandlers = async (): Promise<void> => {
   const settingsService = new JsonLocalSettingsService(
     join(app.getPath('userData'), 'config.json'),
     createDefaultSettings()
+  )
+  await settingsService.save(await settingsService.load())
+
+  const analyticsService = new PostHogAnalyticsService(
+    settingsService,
+    app.getVersion()
   )
   const processService = new SystemProcessService()
   const logService = new JsonLinesLocalLogService(
@@ -202,6 +222,34 @@ const registerEnvironmentHandlers = (): void => {
     join(app.getPath('userData'), 'backups', 'mod-update')
   )
 
+  ipcMain.handle(ipcChannels.getAnalyticsSettings, () =>
+    analyticsService.getSettings()
+  )
+  ipcMain.handle(
+    ipcChannels.setAnalyticsEnabled,
+    (_event, enabled: unknown) => {
+      if (typeof enabled !== 'boolean') {
+        throw new Error('Invalid analytics setting.')
+      }
+
+      return analyticsService.setEnabled(enabled)
+    }
+  )
+  ipcMain.handle(
+    ipcChannels.trackAnalyticsEvent,
+    (_event, event: unknown, properties: unknown) => {
+      if (typeof event !== 'string') {
+        return
+      }
+
+      return analyticsService.trackEvent(
+        event as AnalyticsEventName,
+        isRecord(properties)
+          ? (properties as AnalyticsEventProperties)
+          : undefined
+      )
+    }
+  )
   ipcMain.handle(ipcChannels.loadConfig, () => settingsService.load())
   ipcMain.handle(
     ipcChannels.saveConfig,
@@ -291,12 +339,26 @@ const registerEnvironmentHandlers = (): void => {
       return modUpdateService.saveManifestUrl(request.manifestUrl)
     }
   )
-  ipcMain.handle(ipcChannels.checkModUpdate, () =>
-    modUpdateService.checkForUpdate()
-  )
-  ipcMain.handle(ipcChannels.installModUpdate, () =>
-    modUpdateService.installUpdate()
-  )
+  ipcMain.handle(ipcChannels.checkModUpdate, async () => {
+    const result = await modUpdateService.checkForUpdate()
+    void analyticsService.trackEvent('mod_update_checked', {
+      success: result.success,
+      error_code: result.errorCode,
+      installed_version: result.info.installedVersion ?? undefined,
+      remote_version: result.info.manifest?.version
+    })
+    return result
+  })
+  ipcMain.handle(ipcChannels.installModUpdate, async () => {
+    const result = await modUpdateService.installUpdate()
+    void analyticsService.trackEvent('mod_update_installed', {
+      success: result.success,
+      error_code: result.errorCode,
+      installed_version: result.info.installedVersion ?? undefined,
+      modpack_version: result.info.manifest?.version
+    })
+    return result
+  })
 }
 
 const createMainWindow = (): BrowserWindow => {
@@ -329,8 +391,8 @@ const createMainWindow = (): BrowserWindow => {
   return mainWindow
 }
 
-app.whenReady().then(() => {
-  registerEnvironmentHandlers()
+app.whenReady().then(async () => {
+  await registerEnvironmentHandlers()
   createMainWindow()
 
   app.on('activate', () => {

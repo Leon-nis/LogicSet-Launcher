@@ -6,6 +6,13 @@ const logicSetApi: LogicSetApi = {
     name: 'LogicSet Launcher',
     version: '0.1.0'
   }),
+  analytics: {
+    getSettings: () => ipcRenderer.invoke('analytics:get-settings'),
+    setEnabled: (enabled) =>
+      ipcRenderer.invoke('analytics:set-enabled', enabled),
+    trackEvent: (event, properties) =>
+      ipcRenderer.invoke('analytics:track-event', event, properties)
+  },
   environment: {
     loadConfig: () => ipcRenderer.invoke('environment:load-config'),
     saveConfig: (settings) =>

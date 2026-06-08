@@ -66,6 +66,7 @@ const isLocalSettings = (value: unknown): value is LocalSettings => {
   const { gamePaths } = value
 
   const { modUpdate } = value
+  const { analytics } = value
 
   return (
     isRecord(gamePaths) &&
@@ -76,7 +77,11 @@ const isLocalSettings = (value: unknown): value is LocalSettings => {
     isRecord(modUpdate) &&
     typeof modUpdate.manifestUrl === 'string' &&
     (typeof modUpdate.installedVersion === 'string' ||
-      modUpdate.installedVersion === null)
+      modUpdate.installedVersion === null) &&
+    isRecord(analytics) &&
+    typeof analytics.enabled === 'boolean' &&
+    typeof analytics.anonymousId === 'string' &&
+    analytics.anonymousId.trim() !== ''
   )
 }
 
@@ -113,6 +118,7 @@ const normalizeLocalSettings = (
   }
 
   const modUpdate = isRecord(value.modUpdate) ? value.modUpdate : {}
+  const analytics = isRecord(value.analytics) ? value.analytics : {}
 
   return {
     schemaVersion: 1,
@@ -133,6 +139,17 @@ const normalizeLocalSettings = (
         modUpdate.installedVersion === null
           ? modUpdate.installedVersion
           : defaultSettings.modUpdate.installedVersion
+    },
+    analytics: {
+      enabled:
+        typeof analytics.enabled === 'boolean'
+          ? analytics.enabled
+          : defaultSettings.analytics.enabled,
+      anonymousId:
+        typeof analytics.anonymousId === 'string' &&
+        analytics.anonymousId.trim() !== ''
+          ? analytics.anonymousId
+          : defaultSettings.analytics.anonymousId
     }
   }
 }

@@ -3,6 +3,7 @@ import { ButtonRow } from '../components/ButtonRow'
 import { FieldRow } from '../components/FieldRow'
 import { PageLayout } from '../components/PageLayout'
 import type {
+  AnalyticsSettings,
   GamePathKey,
   GamePaths,
   LocalSettings,
@@ -60,6 +61,11 @@ const emptyValidation: PathValidation = {
   localSettingsPath: false
 }
 
+const emptyAnalyticsSettings: AnalyticsSettings = {
+  enabled: false,
+  anonymousId: ''
+}
+
 export const EnvironmentPage = (): React.JSX.Element => {
   const [paths, setPaths] = useState<GamePaths>(emptyPaths)
   const [validation, setValidation] =
@@ -69,6 +75,10 @@ export const EnvironmentPage = (): React.JSX.Element => {
       manifestUrl: DEFAULT_LOGICSET_MANIFEST_URL,
       installedVersion: null
     })
+  const [analyticsSettings, setAnalyticsSettings] =
+    useState<AnalyticsSettings>(emptyAnalyticsSettings)
+  const [isSavingAnalytics, setIsSavingAnalytics] = useState(false)
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null)
   const [isSavedExecutableValid, setIsSavedExecutableValid] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -125,6 +135,7 @@ export const EnvironmentPage = (): React.JSX.Element => {
         const settings = await window.logicSet.environment.loadConfig()
         setPaths(settings.gamePaths)
         setModUpdateSettings(settings.modUpdate)
+        setAnalyticsSettings(settings.analytics)
         const [loadedValidation] = await Promise.all([
           refreshValidation(settings.gamePaths),
           loadUdpPort(settings.gamePaths.localSettingsPath)
@@ -194,7 +205,8 @@ export const EnvironmentPage = (): React.JSX.Element => {
     const settings: LocalSettings = {
       schemaVersion: 1,
       gamePaths: paths,
-      modUpdate: modUpdateSettings
+      modUpdate: modUpdateSettings,
+      analytics: analyticsSettings
     }
 
     try {
@@ -202,6 +214,7 @@ export const EnvironmentPage = (): React.JSX.Element => {
         await window.logicSet.environment.saveConfig(settings)
       setPaths(savedSettings.gamePaths)
       setModUpdateSettings(savedSettings.modUpdate)
+      setAnalyticsSettings(savedSettings.analytics)
       const savedValidation =
         await refreshValidation(savedSettings.gamePaths)
       setIsSavedExecutableValid(
@@ -212,6 +225,21 @@ export const EnvironmentPage = (): React.JSX.Element => {
       setError('Could not save the local environment configuration.')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const setAnalyticsEnabled = async (enabled: boolean): Promise<void> => {
+    setIsSavingAnalytics(true)
+    setAnalyticsError(null)
+
+    try {
+      const savedSettings =
+        await window.logicSet.analytics.setEnabled(enabled)
+      setAnalyticsSettings(savedSettings)
+    } catch {
+      setAnalyticsError('Could not save the analytics preference.')
+    } finally {
+      setIsSavingAnalytics(false)
     }
   }
 
@@ -368,6 +396,33 @@ export const EnvironmentPage = (): React.JSX.Element => {
           </>
         )}
       </section>
+
+      {!isLoading && (
+        <section className="analytics-panel">
+          <div className="analytics-copy">
+            <span className="eyebrow">Privacy</span>
+            <h2>Anonymous analytics</h2>
+            <p>
+              Sends anonymous launcher usage events. Does not send paths,
+              save files, character names, or file contents.
+            </p>
+            {analyticsError && (
+              <p className="form-message error">{analyticsError}</p>
+            )}
+          </div>
+          <label className="analytics-toggle">
+            <input
+              type="checkbox"
+              checked={analyticsSettings.enabled}
+              disabled={isSavingAnalytics}
+              onChange={(event) =>
+                void setAnalyticsEnabled(event.target.checked)
+              }
+            />
+            <span>Enable anonymous analytics</span>
+          </label>
+        </section>
+      )}
 
       {!isLoading && (
         <section className="udp-port-panel">

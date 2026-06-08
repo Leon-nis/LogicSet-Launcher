@@ -35,11 +35,33 @@ export interface LocalSettings {
   readonly schemaVersion: 1
   readonly gamePaths: GamePaths
   readonly modUpdate: ModUpdateSettings
+  readonly analytics: AnalyticsSettings
 }
 
 export interface ModUpdateSettings {
   readonly manifestUrl: string
   readonly installedVersion: string | null
+}
+
+export interface AnalyticsSettings {
+  readonly enabled: boolean
+  readonly anonymousId: string
+}
+
+export type AnalyticsEventName =
+  | 'analytics_enabled'
+  | 'mod_update_tab_opened'
+  | 'mod_update_checked'
+  | 'mod_update_installed'
+
+export interface AnalyticsEventProperties {
+  readonly app_version?: string
+  readonly os?: string
+  readonly success?: boolean
+  readonly error_code?: string
+  readonly installed_version?: string
+  readonly remote_version?: string
+  readonly modpack_version?: string
 }
 
 export type UdpPortReadResult =
@@ -167,6 +189,14 @@ export interface SaveManifestUrlRequest {
 
 export interface LogicSetApi {
   readonly getAppInfo: () => Promise<AppInfo>
+  readonly analytics: {
+    readonly getSettings: () => Promise<AnalyticsSettings>
+    readonly setEnabled: (enabled: boolean) => Promise<AnalyticsSettings>
+    readonly trackEvent: (
+      event: AnalyticsEventName,
+      properties?: AnalyticsEventProperties
+    ) => Promise<void>
+  }
   readonly environment: {
     readonly loadConfig: () => Promise<LocalSettings>
     readonly saveConfig: (settings: LocalSettings) => Promise<LocalSettings>
