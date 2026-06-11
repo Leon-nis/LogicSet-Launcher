@@ -5,55 +5,18 @@ export type NavigationPage =
   | 'sets'
   | 'mod-update'
 
-export const SOCKETABLE_STATS = [
-  'ALL DAMAGE TAKEN %',
-  'ALL DAMAGE %',
-  'DAMAGE %',
-  'DAMAGE PHYSICAL %',
-  'WEAPON DAMAGE',
-  'WEAPON DAMAGE ELECTRICAL',
-  'WEAPON DAMAGE PHYSICAL',
-  'MELEE WEAPON DAMAGE',
-  'ARMOR FLAT',
-  'MULT-ARMOR FLAT',
-  'DRAW ARMOR BY MONSTER COUNT (MAX 5)',
-  'KNOCKBACK RESISTANCE',
-  'SLOW RESISTANCE',
-  'IMMOB RESISTANCE',
-  'DAMAGE TAKEN %',
-  'ATTACK SPEED',
-  'CAST SPEED',
-  'BLOCK CHANCE',
-  'CRITICAL CHANCE',
-  'CRITICAL DAMAGE',
-  'DODGE',
-  'EXECUTE CHANCE',
-  'DUAL-WIELDING DAMAGE',
-  'FUMBLE CHANCE',
-  'FUMBLE DAMAGE',
-  'HEALTH BONUS',
-  'MANA BONUS',
-  'HEALTH REGEN',
-  'MANA REGEN',
-  'PET HEALTH %',
-  'PET ARMOR %',
-  'PET DAMAGE %',
-  'MISSILES RANGE BONUS',
-  'PROC FULLYHEAL (ON KILL)',
-  'PROC ACID RAIN',
-  'PROC SHADOWLING BAT (ON KILL)',
-  'PROC METEOR STRIKE (ON KILL)',
-  'KNOCKBACK BONUS',
-  'SHORT STUN',
-  'ARMOR DEGREE',
-  'SHIELD BREAK',
-  'CONVEYS DAMAGE',
-  'GOLD DROP',
-  'SPEED %',
-  'XP %'
-] as const
+export {
+  DEFAULT_SOCKETABLE_STAT,
+  findSocketableStat,
+  isSocketableStat,
+  SOCKETABLE_STATS
+} from './socketable-stats'
+export type {
+  SocketableStat,
+  SocketableStatOption
+} from './socketable-stats'
 
-export type SocketableStat = (typeof SOCKETABLE_STATS)[number]
+import type { SocketableStat } from './socketable-stats'
 export type SocketableKind = 'skull' | 'eye'
 
 export interface SocketableEntry {

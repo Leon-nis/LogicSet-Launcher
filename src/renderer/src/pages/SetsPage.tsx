@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  DEFAULT_SOCKETABLE_STAT,
+  findSocketableStat,
   SOCKETABLE_STATS,
   type LogicSetHelmetAffix,
   type LogicSetSetBonus,
@@ -252,7 +254,7 @@ const SetCard = ({
         ...set.helmet,
         affixes: [
           ...set.helmet.affixes,
-          { stat: SOCKETABLE_STATS[0], value: '' }
+          { stat: DEFAULT_SOCKETABLE_STAT, value: '' }
         ]
       }
     })
@@ -286,7 +288,7 @@ const SetCard = ({
         ...set.bonuses,
         {
           pieces: nextPieceCount(set.bonuses),
-          stat: SOCKETABLE_STATS[0]
+          stat: DEFAULT_SOCKETABLE_STAT
         }
       ]
     })
@@ -376,6 +378,7 @@ const SetCard = ({
             <StatSelect
               value={affix.stat}
               disabled={disabled}
+              isDevMode={isDevMode}
               onChange={(stat) => updateAffix(index, { stat })}
             />
             <input
@@ -427,6 +430,7 @@ const SetCard = ({
             <StatSelect
               value={bonus.stat}
               disabled={disabled}
+              isDevMode={isDevMode}
               onChange={(stat) => updateBonus(index, { stat })}
             />
             {isDevMode && (
@@ -485,27 +489,34 @@ const SetListSection = ({
 interface StatSelectProps {
   readonly value: SocketableStat
   readonly disabled: boolean
+  readonly isDevMode: boolean
   readonly onChange: (stat: SocketableStat) => void
 }
 
 const StatSelect = ({
   value,
   disabled,
+  isDevMode,
   onChange
-}: StatSelectProps): React.JSX.Element => (
-  <select
-    value={value}
-    disabled={disabled}
-    aria-label="Stat"
-    onChange={(event) => onChange(event.target.value as SocketableStat)}
-  >
-    {SOCKETABLE_STATS.map((stat) => (
-      <option key={stat} value={stat}>
-        {stat}
-      </option>
-    ))}
-  </select>
-)
+}: StatSelectProps): React.JSX.Element =>
+  isDevMode ? (
+    <select
+      value={value}
+      disabled={disabled}
+      aria-label="Stat"
+      onChange={(event) => onChange(event.target.value as SocketableStat)}
+    >
+      {SOCKETABLE_STATS.map((option) => (
+        <option key={option.id} value={option.id}>
+          {option.code}
+        </option>
+      ))}
+    </select>
+  ) : (
+    <div className="stat-readonly">
+      {findSocketableStat(value)?.description ?? value}
+    </div>
+  )
 
 interface RemoveRowButtonProps {
   readonly disabled: boolean

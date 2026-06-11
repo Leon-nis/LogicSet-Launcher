@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
+  DEFAULT_SOCKETABLE_STAT,
+  findSocketableStat,
   SOCKETABLE_STATS,
   type SocketableEntry,
   type SocketableKind,
@@ -53,7 +55,7 @@ export const SkullsEyesPage = (): React.JSX.Element => {
         id,
         kind: newKind,
         name: '',
-        stat: SOCKETABLE_STATS[0],
+        stat: DEFAULT_SOCKETABLE_STAT,
         value: ''
       }
     ])
@@ -279,21 +281,28 @@ const SocketableCard = ({
       </label>
       <label>
         <span>Stat</span>
-        <select
-          value={socketable.stat}
-          disabled={!isDevMode || isBusy}
-          onChange={(event) =>
-            onChange(socketable.id, {
-              stat: event.target.value as SocketableStat
-            })
-          }
-        >
-          {SOCKETABLE_STATS.map((stat) => (
-            <option key={stat} value={stat}>
-              {stat}
-            </option>
-          ))}
-        </select>
+        {isDevMode ? (
+          <select
+            value={socketable.stat}
+            disabled={isBusy}
+            onChange={(event) =>
+              onChange(socketable.id, {
+                stat: event.target.value as SocketableStat
+              })
+            }
+          >
+            {SOCKETABLE_STATS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.code}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="stat-readonly">
+            {findSocketableStat(socketable.stat)?.description ??
+              socketable.stat}
+          </div>
+        )}
       </label>
       <label>
         <span>Value</span>

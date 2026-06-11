@@ -1213,6 +1213,18 @@ button:focus-visible {
   width: 100%;
 }
 
+.stat-readonly {
+  min-width: 0;
+  min-height: 39px;
+  padding: 9px 11px;
+  border: 1px solid #202b36;
+  border-radius: 8px;
+  color: #b8c2cc;
+  background: #0d141c;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 .socketable-fields input:disabled,
 .socketable-fields select:disabled {
   border-color: #202b36;

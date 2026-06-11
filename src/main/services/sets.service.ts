@@ -1,13 +1,15 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import {
-  SOCKETABLE_STATS,
+  DEFAULT_SOCKETABLE_STAT,
+  findSocketableStat,
+  isSocketableStat,
   type LogicSetHelmetAffix,
   type LogicSetSetBonus,
   type LogicSetSetEntry
 } from '../../shared/types'
 
-const DEFAULT_STAT = SOCKETABLE_STATS[0]
+const DEFAULT_STAT = DEFAULT_SOCKETABLE_STAT
 
 const SET_DEFINITIONS = [
   ['ghastly', 'Ghastly', 5, [2, 3]],
@@ -62,9 +64,9 @@ export class JsonSetsService {
   async load(): Promise<readonly LogicSetSetEntry[]> {
     try {
       const contents = await readFile(this.filePath, 'utf8')
-      const sets: unknown = JSON.parse(contents)
+      const sets = normalizeSetEntries(JSON.parse(contents))
 
-      if (!isLogicSetSetEntries(sets)) {
+      if (sets === null) {
         throw new Error('Invalid sets data.')
       }
 
@@ -141,9 +143,7 @@ const isSetBonus = (value: unknown): value is LogicSetSetBonus =>
 
 const isKnownStat = (
   value: unknown
-): value is (typeof SOCKETABLE_STATS)[number] =>
-  typeof value === 'string' &&
-  SOCKETABLE_STATS.some((stat) => stat === value)
+): value is string => isSocketableStat(value)
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value)
@@ -164,6 +164,44 @@ const cloneAndSortSets = (
       (left, right) =>
         left.level - right.level || left.name.localeCompare(right.name)
     )
+
+const normalizeSetEntries = (
+  value: unknown
+): readonly LogicSetSetEntry[] | null => {
+  if (!Array.isArray(value)) {
+    return null
+  }
+
+  const normalized = value.map((set) => {
+    if (!isRecord(set) || !isRecord(set.helmet)) {
+      return set
+    }
+
+    const affixes = Array.isArray(set.helmet.affixes)
+      ? set.helmet.affixes.map(normalizeStatRecord)
+      : set.helmet.affixes
+    const bonuses = Array.isArray(set.bonuses)
+      ? set.bonuses.map(normalizeStatRecord)
+      : set.bonuses
+
+    return {
+      ...set,
+      helmet: { ...set.helmet, affixes },
+      bonuses
+    }
+  })
+
+  return isLogicSetSetEntries(normalized) ? normalized : null
+}
+
+const normalizeStatRecord = (value: unknown): unknown => {
+  if (!isRecord(value) || typeof value.stat !== 'string') {
+    return value
+  }
+
+  const option = findSocketableStat(value.stat)
+  return option === undefined ? value : { ...value, stat: option.id }
+}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null

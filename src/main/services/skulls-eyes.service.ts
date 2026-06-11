@@ -1,7 +1,8 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import {
-  SOCKETABLE_STATS,
+  findSocketableStat,
+  isSocketableStat,
   type SocketableEntry,
   type SocketableStat
 } from '../../shared/types'
@@ -11,42 +12,42 @@ export const DEFAULT_SOCKETABLES: readonly SocketableEntry[] = [
     id: 'skull_001',
     kind: 'skull',
     name: '',
-    stat: 'ALL DAMAGE %',
+    stat: 'ALL DAMAGE % | to All Damage bonus',
     value: ''
   },
   {
     id: 'skull_002',
     kind: 'skull',
     name: '',
-    stat: 'HEALTH BONUS',
+    stat: 'HEALTH BONUS | Health bonus',
     value: ''
   },
   {
     id: 'skull_003',
     kind: 'skull',
     name: '',
-    stat: 'CRITICAL DAMAGE',
+    stat: 'CRITICAL DAMAGE | bonus to Critical Damage',
     value: ''
   },
   {
     id: 'eye_001',
     kind: 'eye',
     name: '',
-    stat: 'CRITICAL CHANCE',
+    stat: 'CRITICAL CHANCE | Critical Hit Chance bonus',
     value: ''
   },
   {
     id: 'eye_002',
     kind: 'eye',
     name: '',
-    stat: 'MANA BONUS',
+    stat: 'MANA BONUS | Mana bonus',
     value: ''
   },
   {
     id: 'eye_003',
     kind: 'eye',
     name: '',
-    stat: 'XP %',
+    stat: 'XP % | increase in the amount of experience gained',
     value: ''
   }
 ]
@@ -123,8 +124,7 @@ const isSocketableEntry = (value: unknown): value is SocketableEntry => {
     (value.kind === 'skull' || value.kind === 'eye') &&
     typeof value.name === 'string' &&
     typeof value.value === 'string' &&
-    typeof value.stat === 'string' &&
-    SOCKETABLE_STATS.some((stat) => stat === value.stat) &&
+    isSocketableStat(value.stat) &&
     (value.iconPath === undefined || typeof value.iconPath === 'string')
   )
 }
@@ -154,10 +154,11 @@ const normalizeSocketableEntries = (
       return entry
     }
 
-    const migratedStat = LEGACY_STATS[entry.stat]
+    const legacyStat = LEGACY_STATS[entry.stat] ?? entry.stat
+    const migratedStat = findSocketableStat(legacyStat)
     return migratedStat === undefined
       ? entry
-      : { ...entry, stat: migratedStat }
+      : { ...entry, stat: migratedStat.id }
   })
 
   return isSocketableEntries(normalized) ? normalized : null
