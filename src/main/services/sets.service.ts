@@ -4,12 +4,10 @@ import {
   DEFAULT_SOCKETABLE_STAT,
   findSocketableStat,
   isSocketableStat,
-  type LogicSetHelmetAffix,
+  type LogicSetAffix,
   type LogicSetSetBonus,
   type LogicSetSetEntry
 } from '../../shared/types'
-
-const DEFAULT_STAT = DEFAULT_SOCKETABLE_STAT
 
 const SET_DEFINITIONS = [
   ['ghastly', 'Ghastly', 5, [2, 3]],
@@ -25,12 +23,7 @@ const SET_DEFINITIONS = [
   ['railforged', 'RailForged', 19, [2, 3, 4]],
   ['true_north', 'True North', 19, [2, 3, 4]],
   ['wanderlust', 'Wanderlust', 19, [2, 3, 4]],
-  [
-    'occultist_apprentice',
-    'Occultist Apprentice',
-    20,
-    [2, 3, 4, 7]
-  ],
+  ['occultist_apprentice', 'Occultist Apprentice', 20, [2, 3, 4, 7]],
   ['argonaut', 'Argonaut', 22, [2, 3, 4, 7]],
   ['estheria', 'Estheria', 23, [2, 3, 4, 7]],
   ['blood_leather', 'Blood Leather', 25, [2, 3]],
@@ -44,17 +37,23 @@ const SET_DEFINITIONS = [
 ] as const
 
 export const DEFAULT_LOGICSET_SETS: readonly LogicSetSetEntry[] =
-  SET_DEFINITIONS.map(([id, name, level, pieces]) => ({
+  SET_DEFINITIONS.map(([id, name, level, bonusPieces]) => ({
     id,
     name,
     level,
     rarity: 'rare',
     helmet: {
+      isSpecial: false,
       affixes: []
     },
-    bonuses: pieces.map((pieceCount) => ({
-      pieces: pieceCount,
-      stat: DEFAULT_STAT
+    bonuses: bonusPieces.map((pieces) => ({
+      pieces,
+      affixes: [
+        {
+          stat: DEFAULT_SOCKETABLE_STAT,
+          value: ''
+        }
+      ]
     }))
   }))
 
@@ -124,26 +123,26 @@ const isLogicSetSetEntry = (value: unknown): value is LogicSetSetEntry => {
     (value.rarity === 'rare' ||
       value.rarity === 'unique' ||
       value.rarity === 'legendary') &&
+    typeof value.helmet.isSpecial === 'boolean' &&
     (value.helmet.iconPath === undefined ||
       typeof value.helmet.iconPath === 'string') &&
     Array.isArray(value.helmet.affixes) &&
-    value.helmet.affixes.every(isHelmetAffix) &&
+    value.helmet.affixes.every(isAffix) &&
     Array.isArray(value.bonuses) &&
     value.bonuses.every(isSetBonus)
   )
 }
 
-const isHelmetAffix = (value: unknown): value is LogicSetHelmetAffix =>
+const isAffix = (value: unknown): value is LogicSetAffix =>
   isRecord(value) &&
-  isKnownStat(value.stat) &&
+  isSocketableStat(value.stat) &&
   typeof value.value === 'string'
 
 const isSetBonus = (value: unknown): value is LogicSetSetBonus =>
-  isRecord(value) && isFiniteNumber(value.pieces) && isKnownStat(value.stat)
-
-const isKnownStat = (
-  value: unknown
-): value is string => isSocketableStat(value)
+  isRecord(value) &&
+  isFiniteNumber(value.pieces) &&
+  Array.isArray(value.affixes) &&
+  value.affixes.every(isAffix)
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value)
@@ -158,7 +157,10 @@ const cloneAndSortSets = (
         ...set.helmet,
         affixes: set.helmet.affixes.map((affix) => ({ ...affix }))
       },
-      bonuses: set.bonuses.map((bonus) => ({ ...bonus }))
+      bonuses: set.bonuses.map((bonus) => ({
+        ...bonus,
+        affixes: bonus.affixes.map((affix) => ({ ...affix }))
+      }))
     }))
     .sort(
       (left, right) =>
@@ -177,16 +179,21 @@ const normalizeSetEntries = (
       return set
     }
 
-    const affixes = Array.isArray(set.helmet.affixes)
-      ? set.helmet.affixes.map(normalizeStatRecord)
-      : set.helmet.affixes
+    const helmetAffixes = normalizeAffixArray(set.helmet.affixes)
     const bonuses = Array.isArray(set.bonuses)
-      ? set.bonuses.map(normalizeStatRecord)
+      ? set.bonuses.map(normalizeBonus)
       : set.bonuses
 
     return {
       ...set,
-      helmet: { ...set.helmet, affixes },
+      helmet: {
+        ...set.helmet,
+        isSpecial:
+          typeof set.helmet.isSpecial === 'boolean'
+            ? set.helmet.isSpecial
+            : helmetAffixes.length > 0,
+        affixes: helmetAffixes
+      },
       bonuses
     }
   })
@@ -194,13 +201,45 @@ const normalizeSetEntries = (
   return isLogicSetSetEntries(normalized) ? normalized : null
 }
 
-const normalizeStatRecord = (value: unknown): unknown => {
-  if (!isRecord(value) || typeof value.stat !== 'string') {
+const normalizeBonus = (value: unknown): unknown => {
+  if (!isRecord(value)) {
     return value
   }
 
+  if (Array.isArray(value.affixes)) {
+    return { ...value, affixes: normalizeAffixArray(value.affixes) }
+  }
+
+  const legacyAffix = normalizeAffix({
+    stat: value.stat,
+    value: typeof value.value === 'string' ? value.value : ''
+  })
+
+  return {
+    pieces: value.pieces,
+    affixes: legacyAffix === null ? [] : [legacyAffix]
+  }
+}
+
+const normalizeAffixArray = (value: unknown): readonly unknown[] =>
+  Array.isArray(value)
+    ? value.map(normalizeAffix).filter((affix) => affix !== null)
+    : []
+
+const normalizeAffix = (value: unknown): LogicSetAffix | null => {
+  if (!isRecord(value) || typeof value.stat !== 'string') {
+    return null
+  }
+
   const option = findSocketableStat(value.stat)
-  return option === undefined ? value : { ...value, stat: option.id }
+  if (option === undefined) {
+    return null
+  }
+
+  return {
+    stat: option.id,
+    value: typeof value.value === 'string' ? value.value : ''
+  }
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

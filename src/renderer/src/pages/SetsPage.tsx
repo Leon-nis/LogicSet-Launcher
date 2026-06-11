@@ -3,7 +3,7 @@ import {
   DEFAULT_SOCKETABLE_STAT,
   findSocketableStat,
   SOCKETABLE_STATS,
-  type LogicSetHelmetAffix,
+  type LogicSetAffix,
   type LogicSetSetBonus,
   type LogicSetSetEntry,
   type LogicSetSetRarity,
@@ -15,6 +15,9 @@ type Operation = 'saving' | 'resetting' | null
 
 export const SetsPage = (): React.JSX.Element => {
   const [sets, setSets] = useState<LogicSetSetEntry[]>([])
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(
+    new Set()
+  )
   const [isDevMode, setIsDevMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [operation, setOperation] = useState<Operation>(null)
@@ -52,18 +55,28 @@ export const SetsPage = (): React.JSX.Element => {
     clearFeedback()
   }
 
+  const toggleExpanded = (id: string): void => {
+    setExpandedIds((current) => {
+      const next = new Set(current)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
   const addSet = (): void => {
+    const id = createSetId(sets)
     setSets((current) => [
       ...current,
       {
-        id: createSetId(current),
+        id,
         name: '',
         level: 0,
         rarity: 'rare',
-        helmet: { affixes: [] },
+        helmet: { isSpecial: false, affixes: [] },
         bonuses: []
       }
     ])
+    setExpandedIds((current) => new Set(current).add(id))
     clearFeedback()
   }
 
@@ -73,6 +86,11 @@ export const SetsPage = (): React.JSX.Element => {
     }
 
     setSets((current) => current.filter((entry) => entry.id !== set.id))
+    setExpandedIds((current) => {
+      const next = new Set(current)
+      next.delete(set.id)
+      return next
+    })
     clearFeedback()
   }
 
@@ -102,6 +120,7 @@ export const SetsPage = (): React.JSX.Element => {
     try {
       const defaults = await window.logicSet.sets.resetSetsToDefaults()
       setSets([...defaults])
+      setExpandedIds(new Set())
       setMessage('Sets reset to defaults.')
     } catch (resetError: unknown) {
       setError(formatError('Could not reset sets.', resetError))
@@ -127,10 +146,7 @@ export const SetsPage = (): React.JSX.Element => {
         <div className="sets-toolbar">
           <div className="sets-toolbar-copy">
             <h2>Set registry</h2>
-            <p>
-              Stored only in launcher user data. No mod or game files are read
-              or changed.
-            </p>
+            <p>Local reference only. No mod or game files are changed.</p>
           </div>
           <label className="dev-mode-toggle">
             <input
@@ -160,18 +176,20 @@ export const SetsPage = (): React.JSX.Element => {
           </div>
         )}
 
-        <div className="sets-grid">
+        <div className="sets-list">
           {isLoading ? (
             <p className="sets-state">Loading sets...</p>
           ) : sortedSets.length === 0 ? (
             <p className="sets-state">No sets in this table.</p>
           ) : (
             sortedSets.map((set) => (
-              <SetCard
+              <SetRow
                 key={set.id}
                 set={set}
+                isExpanded={expandedIds.has(set.id)}
                 isDevMode={isDevMode}
                 isBusy={isBusy}
+                onToggle={() => toggleExpanded(set.id)}
                 onChange={replaceSet}
                 onRemove={removeSet}
               />
@@ -210,22 +228,30 @@ export const SetsPage = (): React.JSX.Element => {
   )
 }
 
-interface SetCardProps {
+interface SetRowProps {
   readonly set: LogicSetSetEntry
+  readonly isExpanded: boolean
   readonly isDevMode: boolean
   readonly isBusy: boolean
+  readonly onToggle: () => void
   readonly onChange: (set: LogicSetSetEntry) => void
   readonly onRemove: (set: LogicSetSetEntry) => void
 }
 
-const SetCard = ({
+const SetRow = ({
   set,
+  isExpanded,
   isDevMode,
   isBusy,
+  onToggle,
   onChange,
   onRemove
-}: SetCardProps): React.JSX.Element => {
+}: SetRowProps): React.JSX.Element => {
   const disabled = !isDevMode || isBusy
+  const bonusSummary = set.bonuses
+    .map((bonus) => bonus.pieces)
+    .sort((left, right) => left - right)
+    .join(', ')
 
   const updateDetails = (
     changes: Partial<
@@ -233,41 +259,30 @@ const SetCard = ({
     >
   ): void => onChange({ ...set, ...changes })
 
-  const updateAffix = (
-    index: number,
-    changes: Partial<LogicSetHelmetAffix>
+  const updateHelmet = (
+    changes: Partial<LogicSetSetEntry['helmet']>
   ): void =>
     onChange({
       ...set,
-      helmet: {
-        ...set.helmet,
-        affixes: set.helmet.affixes.map((affix, affixIndex) =>
-          affixIndex === index ? { ...affix, ...changes } : affix
-        )
-      }
+      helmet: { ...set.helmet, ...changes }
     })
 
-  const addAffix = (): void =>
-    onChange({
-      ...set,
-      helmet: {
-        ...set.helmet,
-        affixes: [
-          ...set.helmet.affixes,
-          { stat: DEFAULT_SOCKETABLE_STAT, value: '' }
-        ]
-      }
+  const addHelmetAffix = (): void =>
+    updateHelmet({
+      affixes: [...set.helmet.affixes, createAffix()]
     })
 
-  const removeAffix = (index: number): void =>
-    onChange({
-      ...set,
-      helmet: {
-        ...set.helmet,
-        affixes: set.helmet.affixes.filter(
-          (_affix, affixIndex) => affixIndex !== index
-        )
-      }
+  const updateHelmetAffix = (
+    index: number,
+    changes: Partial<LogicSetAffix>
+  ): void =>
+    updateHelmet({
+      affixes: updateAffixes(set.helmet.affixes, index, changes)
+    })
+
+  const removeHelmetAffix = (index: number): void =>
+    updateHelmet({
+      affixes: removeAffix(set.helmet.affixes, index)
     })
 
   const updateBonus = (
@@ -288,7 +303,7 @@ const SetCard = ({
         ...set.bonuses,
         {
           pieces: nextPieceCount(set.bonuses),
-          stat: DEFAULT_SOCKETABLE_STAT
+          affixes: [createAffix()]
         }
       ]
     })
@@ -302,209 +317,321 @@ const SetCard = ({
     })
 
   return (
-    <article className="set-card" data-rarity={set.rarity}>
-      <div className="set-card-heading">
-        <div className="set-helmet-icon" aria-label="Helmet icon placeholder">
-          HELM
-        </div>
-        <div className="set-heading-fields">
-          <label>
-            <span>Name</span>
-            <input
-              type="text"
-              value={set.name}
-              disabled={disabled}
-              placeholder={isDevMode ? 'Set name' : 'Not set'}
-              onChange={(event) =>
-                updateDetails({ name: event.target.value })
-              }
-            />
-          </label>
-          <div className="set-meta-fields">
-            <label>
-              <span>Level</span>
-              <input
-                type="number"
-                value={set.level}
-                disabled={disabled}
-                onChange={(event) =>
-                  updateDetails({ level: Number(event.target.value) })
-                }
-              />
-            </label>
-            <label>
-              <span>Rarity</span>
-              <select
-                value={set.rarity}
-                disabled={disabled}
-                onChange={(event) =>
-                  updateDetails({
-                    rarity: event.target.value as LogicSetSetRarity
-                  })
-                }
-              >
-                <option value="rare">Rare</option>
-                <option value="unique">Unique</option>
-                <option value="legendary">Legendary</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        {isDevMode && (
-          <button
-            className="set-remove-button"
-            type="button"
-            disabled={isBusy}
-            onClick={() => onRemove(set)}
-          >
-            Remove
-          </button>
-        )}
-      </div>
-
-      <code className="set-id">{set.id}</code>
-
-      <SetListSection
-        title="Helmet affixes"
-        emptyText="No helmet affixes registered."
-        isEmpty={set.helmet.affixes.length === 0}
-        isDevMode={isDevMode}
-        isBusy={isBusy}
-        addLabel="Add affix"
-        onAdd={addAffix}
+    <article className="set-row" data-rarity={set.rarity}>
+      <button
+        className="set-summary"
+        type="button"
+        aria-expanded={isExpanded}
+        onClick={onToggle}
       >
-        {set.helmet.affixes.map((affix, index) => (
-          <div className="set-entry-row affix-row" key={`${index}-${affix.stat}`}>
-            <StatSelect
-              value={affix.stat}
-              disabled={disabled}
-              isDevMode={isDevMode}
-              onChange={(stat) => updateAffix(index, { stat })}
-            />
-            <input
-              type="text"
-              value={affix.value}
-              disabled={disabled}
-              placeholder={isDevMode ? 'Value' : 'Not set'}
-              aria-label={`Helmet affix ${index + 1} value`}
-              onChange={(event) =>
-                updateAffix(index, { value: event.target.value })
-              }
-            />
-            {isDevMode && (
-              <RemoveRowButton
-                disabled={isBusy}
-                label={`Remove helmet affix ${index + 1}`}
-                onClick={() => removeAffix(index)}
-              />
-            )}
-          </div>
-        ))}
-      </SetListSection>
+        <span className="set-chevron" aria-hidden="true">
+          {isExpanded ? '▼' : '▶'}
+        </span>
+        <strong>Lv {set.level}</strong>
+        <span className="set-summary-name">{set.name || 'Unnamed set'}</span>
+        <span className="set-rarity" data-rarity={set.rarity}>
+          {formatRarity(set.rarity)}
+        </span>
+        <span>Bonuses: {bonusSummary || 'None'}</span>
+        <span>Helmet Special: {set.helmet.isSpecial ? '✓' : '—'}</span>
+      </button>
 
-      <SetListSection
-        title="Bonuses by pieces"
-        emptyText="No set bonuses registered."
-        isEmpty={set.bonuses.length === 0}
-        isDevMode={isDevMode}
-        isBusy={isBusy}
-        addLabel="Add bonus"
-        onAdd={addBonus}
-      >
-        {set.bonuses.map((bonus, index) => (
-          <div className="set-entry-row bonus-row" key={`${index}-${bonus.pieces}`}>
-            <label className="pieces-field">
-              <span>Pieces</span>
-              <input
-                type="number"
-                value={bonus.pieces}
-                disabled={disabled}
-                aria-label={`Bonus ${index + 1} pieces`}
-                onChange={(event) =>
-                  updateBonus(index, {
-                    pieces: Number(event.target.value)
-                  })
-                }
-              />
-            </label>
-            <StatSelect
-              value={bonus.stat}
-              disabled={disabled}
-              isDevMode={isDevMode}
-              onChange={(stat) => updateBonus(index, { stat })}
-            />
-            {isDevMode && (
-              <RemoveRowButton
-                disabled={isBusy}
-                label={`Remove bonus ${index + 1}`}
-                onClick={() => removeBonus(index)}
-              />
-            )}
-          </div>
-        ))}
-      </SetListSection>
+      {isExpanded && (
+        <div className="set-expanded">
+          <section className="set-compact-section">
+            <div className="set-section-heading">
+              <h3>General</h3>
+              {isDevMode && (
+                <button
+                  className="set-remove-button"
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => onRemove(set)}
+                >
+                  Remove set
+                </button>
+              )}
+            </div>
+            <div className="set-general-grid">
+              <label>
+                <span>Name</span>
+                <input
+                  type="text"
+                  value={set.name}
+                  disabled={disabled}
+                  onChange={(event) =>
+                    updateDetails({ name: event.target.value })
+                  }
+                />
+              </label>
+              <label>
+                <span>Level</span>
+                <input
+                  type="number"
+                  value={set.level}
+                  disabled={disabled}
+                  onChange={(event) =>
+                    updateDetails({ level: Number(event.target.value) })
+                  }
+                />
+              </label>
+              <label>
+                <span>Rarity</span>
+                <select
+                  value={set.rarity}
+                  disabled={disabled}
+                  onChange={(event) =>
+                    updateDetails({
+                      rarity: event.target.value as LogicSetSetRarity
+                    })
+                  }
+                >
+                  <option value="rare">Rare</option>
+                  <option value="unique">Unique</option>
+                  <option value="legendary">Legendary</option>
+                </select>
+              </label>
+              <label>
+                <span>Bonus Pieces</span>
+                <div className="set-readonly-field">
+                  {bonusSummary || 'None'}
+                </div>
+              </label>
+              <label className="general-helmet-toggle">
+                <span>Unique Helmet / Fixed Affixes</span>
+                <span className="helmet-special-toggle">
+                  <input
+                    type="checkbox"
+                    checked={set.helmet.isSpecial}
+                    disabled={disabled}
+                    onChange={(event) =>
+                      updateHelmet({ isSpecial: event.target.checked })
+                    }
+                  />
+                  <span>Enabled</span>
+                </span>
+              </label>
+            </div>
+          </section>
+
+          {set.helmet.isSpecial && (
+            <section className="set-compact-section">
+              <div className="set-section-heading">
+                <h3>Unique Helmet / Fixed Helmet Affixes</h3>
+              </div>
+              <div className="helmet-special-content">
+                <div
+                  className="set-helmet-icon"
+                  aria-label="Helmet icon placeholder"
+                >
+                  HELM
+                </div>
+                <div className="set-affix-list">
+                  {set.helmet.affixes.map((affix, index) => (
+                    <AffixRow
+                      key={`${index}-${affix.stat}`}
+                      affix={affix}
+                      index={index}
+                      label="Helmet"
+                      isDevMode={isDevMode}
+                      isBusy={isBusy}
+                      onChange={(changes) =>
+                        updateHelmetAffix(index, changes)
+                      }
+                      onRemove={() => removeHelmetAffix(index)}
+                    />
+                  ))}
+                  {set.helmet.affixes.length === 0 && (
+                    <p className="set-list-empty">
+                      No fixed helmet affixes registered.
+                    </p>
+                  )}
+                  {isDevMode && (
+                    <AddAffixButton
+                      disabled={isBusy}
+                      onClick={addHelmetAffix}
+                    />
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          <section className="set-compact-section">
+            <div className="set-section-heading">
+              <h3>Set Bonuses</h3>
+              {isDevMode && (
+                <button
+                  className="set-add-row-button"
+                  type="button"
+                  disabled={isBusy}
+                  onClick={addBonus}
+                >
+                  Add bonus
+                </button>
+              )}
+            </div>
+
+            <div className="set-bonus-list">
+              {set.bonuses.map((bonus, bonusIndex) => (
+                <div
+                  className="set-bonus-group"
+                  key={`${bonusIndex}-${bonus.pieces}`}
+                >
+                  <div className="set-bonus-label">
+                    {isDevMode ? (
+                      <label>
+                        <span>Pieces</span>
+                        <input
+                          type="number"
+                          value={bonus.pieces}
+                          disabled={isBusy}
+                          onChange={(event) =>
+                            updateBonus(bonusIndex, {
+                              pieces: Number(event.target.value)
+                            })
+                          }
+                        />
+                      </label>
+                    ) : (
+                      <strong>{bonus.pieces} pieces</strong>
+                    )}
+                    {isDevMode && (
+                      <button
+                        className="set-remove-row-button"
+                        type="button"
+                        disabled={isBusy}
+                        onClick={() => removeBonus(bonusIndex)}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <div className="set-affix-list">
+                    {bonus.affixes.map((affix, affixIndex) => (
+                      <AffixRow
+                        key={`${affixIndex}-${affix.stat}`}
+                        affix={affix}
+                        index={affixIndex}
+                        label={`${bonus.pieces} pieces`}
+                        isDevMode={isDevMode}
+                        isBusy={isBusy}
+                        onChange={(changes) =>
+                          updateBonus(bonusIndex, {
+                            affixes: updateAffixes(
+                              bonus.affixes,
+                              affixIndex,
+                              changes
+                            )
+                          })
+                        }
+                        onRemove={() =>
+                          updateBonus(bonusIndex, {
+                            affixes: removeAffix(
+                              bonus.affixes,
+                              affixIndex
+                            )
+                          })
+                        }
+                      />
+                    ))}
+                    {bonus.affixes.length === 0 && (
+                      <p className="set-list-empty">
+                        No affixes registered.
+                      </p>
+                    )}
+                    {isDevMode && (
+                      <AddAffixButton
+                        disabled={isBusy}
+                        onClick={() =>
+                          updateBonus(bonusIndex, {
+                            affixes: [...bonus.affixes, createAffix()]
+                          })
+                        }
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </article>
   )
 }
 
-interface SetListSectionProps {
-  readonly title: string
-  readonly emptyText: string
-  readonly isEmpty: boolean
+interface AffixRowProps {
+  readonly affix: LogicSetAffix
+  readonly index: number
+  readonly label: string
   readonly isDevMode: boolean
   readonly isBusy: boolean
-  readonly addLabel: string
-  readonly onAdd: () => void
-  readonly children: React.ReactNode
+  readonly onChange: (changes: Partial<LogicSetAffix>) => void
+  readonly onRemove: () => void
 }
 
-const SetListSection = ({
-  title,
-  emptyText,
-  isEmpty,
+const AffixRow = ({
+  affix,
+  index,
+  label,
   isDevMode,
   isBusy,
-  addLabel,
-  onAdd,
-  children
-}: SetListSectionProps): React.JSX.Element => (
-  <section className="set-list-section">
-    <div className="set-list-heading">
-      <h3>{title}</h3>
-      {isDevMode && (
-        <button
-          className="set-add-row-button"
-          type="button"
-          disabled={isBusy}
-          onClick={onAdd}
-        >
-          {addLabel}
-        </button>
-      )}
-    </div>
-    {isEmpty ? <p className="set-list-empty">{emptyText}</p> : children}
-  </section>
+  onChange,
+  onRemove
+}: AffixRowProps): React.JSX.Element => (
+  <div className="set-affix-row">
+    <StatField
+      value={affix.stat}
+      isDevMode={isDevMode}
+      disabled={isBusy}
+      onChange={(stat) => onChange({ stat })}
+    />
+    {isDevMode ? (
+      <input
+        type="text"
+        value={affix.value}
+        disabled={isBusy}
+        placeholder="Value"
+        aria-label={`${label} affix ${index + 1} value`}
+        onChange={(event) => onChange({ value: event.target.value })}
+      />
+    ) : (
+      <div className="set-readonly-field">{affix.value || 'Not set'}</div>
+    )}
+    {isDevMode && (
+      <button
+        className="set-remove-row-button"
+        type="button"
+        disabled={isBusy}
+        aria-label={`Remove ${label} affix ${index + 1}`}
+        onClick={onRemove}
+      >
+        ×
+      </button>
+    )}
+  </div>
 )
 
-interface StatSelectProps {
+interface StatFieldProps {
   readonly value: SocketableStat
-  readonly disabled: boolean
   readonly isDevMode: boolean
+  readonly disabled: boolean
   readonly onChange: (stat: SocketableStat) => void
 }
 
-const StatSelect = ({
+const StatField = ({
   value,
-  disabled,
   isDevMode,
+  disabled,
   onChange
-}: StatSelectProps): React.JSX.Element =>
+}: StatFieldProps): React.JSX.Element =>
   isDevMode ? (
     <select
       value={value}
       disabled={disabled}
       aria-label="Stat"
-      onChange={(event) => onChange(event.target.value as SocketableStat)}
+      onChange={(event) => onChange(event.target.value)}
     >
       {SOCKETABLE_STATS.map((option) => (
         <option key={option.id} value={option.id}>
@@ -513,32 +640,47 @@ const StatSelect = ({
       ))}
     </select>
   ) : (
-    <div className="stat-readonly">
+    <div className="set-readonly-field">
       {findSocketableStat(value)?.description ?? value}
     </div>
   )
 
-interface RemoveRowButtonProps {
-  readonly disabled: boolean
-  readonly label: string
-  readonly onClick: () => void
-}
-
-const RemoveRowButton = ({
+const AddAffixButton = ({
   disabled,
-  label,
   onClick
-}: RemoveRowButtonProps): React.JSX.Element => (
+}: {
+  readonly disabled: boolean
+  readonly onClick: () => void
+}): React.JSX.Element => (
   <button
-    className="set-remove-row-button"
+    className="set-add-affix-button"
     type="button"
     disabled={disabled}
-    aria-label={label}
     onClick={onClick}
   >
-    Remove
+    + Affix
   </button>
 )
+
+const createAffix = (): LogicSetAffix => ({
+  stat: DEFAULT_SOCKETABLE_STAT,
+  value: ''
+})
+
+const updateAffixes = (
+  affixes: readonly LogicSetAffix[],
+  index: number,
+  changes: Partial<LogicSetAffix>
+): readonly LogicSetAffix[] =>
+  affixes.map((affix, affixIndex) =>
+    affixIndex === index ? { ...affix, ...changes } : affix
+  )
+
+const removeAffix = (
+  affixes: readonly LogicSetAffix[],
+  index: number
+): readonly LogicSetAffix[] =>
+  affixes.filter((_affix, affixIndex) => affixIndex !== index)
 
 const nextPieceCount = (
   bonuses: readonly LogicSetSetBonus[]
@@ -559,6 +701,9 @@ const createSetId = (sets: readonly LogicSetSetEntry[]): string => {
 
   return id
 }
+
+const formatRarity = (rarity: LogicSetSetRarity): string =>
+  rarity.charAt(0).toUpperCase() + rarity.slice(1)
 
 const formatError = (message: string, error: unknown): string =>
   `${message} ${error instanceof Error ? error.message : String(error)}`

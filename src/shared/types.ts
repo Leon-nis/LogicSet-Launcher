@@ -30,14 +30,14 @@ export interface SocketableEntry {
 
 export type LogicSetSetRarity = 'rare' | 'unique' | 'legendary'
 
-export interface LogicSetSetBonus {
-  readonly pieces: number
-  readonly stat: SocketableStat
-}
-
-export interface LogicSetHelmetAffix {
+export interface LogicSetAffix {
   readonly stat: SocketableStat
   readonly value: string
+}
+
+export interface LogicSetSetBonus {
+  readonly pieces: number
+  readonly affixes: readonly LogicSetAffix[]
 }
 
 export interface LogicSetSetEntry {
@@ -46,8 +46,9 @@ export interface LogicSetSetEntry {
   readonly level: number
   readonly rarity: LogicSetSetRarity
   readonly helmet: {
+    readonly isSpecial: boolean
     readonly iconPath?: string
-    readonly affixes: readonly LogicSetHelmetAffix[]
+    readonly affixes: readonly LogicSetAffix[]
   }
   readonly bonuses: readonly LogicSetSetBonus[]
 }
