@@ -42,6 +42,11 @@ const logicSetApi: LogicSetApi = {
     resetSocketablesToDefaults: () =>
       ipcRenderer.invoke('skulls-eyes:reset')
   },
+  sets: {
+    getSets: () => ipcRenderer.invoke('sets:get'),
+    saveSets: (sets) => ipcRenderer.invoke('sets:save', sets),
+    resetSetsToDefaults: () => ipcRenderer.invoke('sets:reset')
+  },
   modUpdate: {
     getInfo: () => ipcRenderer.invoke('mod-update:get-info'),
     saveManifestUrl: (request) =>

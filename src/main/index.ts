@@ -23,6 +23,10 @@ import { DefaultModUpdateService } from './services/mod-update.service'
 import { SystemProcessService } from './services/process.service'
 import { DefaultSaveManagerService } from './services/save-manager.service'
 import {
+  isLogicSetSetEntries,
+  JsonSetsService
+} from './services/sets.service'
+import {
   isSocketableEntries,
   JsonSkullsEyesService
 } from './services/skulls-eyes.service'
@@ -44,6 +48,9 @@ const ipcChannels = {
   getSocketables: 'skulls-eyes:get',
   saveSocketables: 'skulls-eyes:save',
   resetSocketables: 'skulls-eyes:reset',
+  getSets: 'sets:get',
+  saveSets: 'sets:save',
+  resetSets: 'sets:reset',
   getModUpdateInfo: 'mod-update:get-info',
   saveManifestUrl: 'mod-update:save-manifest-url',
   checkModUpdate: 'mod-update:check',
@@ -231,6 +238,9 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
   const skullsEyesService = new JsonSkullsEyesService(
     join(app.getPath('userData'), 'skulls-eyes.json')
   )
+  const setsService = new JsonSetsService(
+    join(app.getPath('userData'), 'sets.json')
+  )
 
   ipcMain.handle(ipcChannels.getAnalyticsSettings, () =>
     analyticsService.getSettings()
@@ -352,6 +362,15 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
   ipcMain.handle(ipcChannels.resetSocketables, () =>
     skullsEyesService.reset()
   )
+  ipcMain.handle(ipcChannels.getSets, () => setsService.load())
+  ipcMain.handle(ipcChannels.saveSets, (_event, sets: unknown) => {
+    if (!isLogicSetSetEntries(sets)) {
+      throw new Error('Invalid sets data.')
+    }
+
+    return setsService.save(sets)
+  })
+  ipcMain.handle(ipcChannels.resetSets, () => setsService.reset())
   ipcMain.handle(ipcChannels.getModUpdateInfo, () =>
     modUpdateService.getInfo()
   )

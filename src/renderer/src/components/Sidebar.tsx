@@ -15,6 +15,7 @@ const navigationItems: readonly NavigationItem[] = [
   { id: 'environment', label: 'Environment', marker: 'EN' },
   { id: 'saves', label: 'Saves', marker: 'SV' },
   { id: 'skulls-eyes', label: 'Skulls & Eyes', marker: 'SE' },
+  { id: 'sets', label: 'Sets', marker: 'ST' },
   { id: 'mod-update', label: 'Mod Update', marker: 'UP' }
 ]
 

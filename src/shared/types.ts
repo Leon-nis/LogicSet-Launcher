@@ -2,6 +2,7 @@ export type NavigationPage =
   | 'environment'
   | 'saves'
   | 'skulls-eyes'
+  | 'sets'
   | 'mod-update'
 
 export const SOCKETABLE_STATS = [
@@ -62,6 +63,30 @@ export interface SocketableEntry {
   readonly stat: SocketableStat
   readonly value: string
   readonly iconPath?: string
+}
+
+export type LogicSetSetRarity = 'rare' | 'unique' | 'legendary'
+
+export interface LogicSetSetBonus {
+  readonly pieces: number
+  readonly stat: SocketableStat
+}
+
+export interface LogicSetHelmetAffix {
+  readonly stat: SocketableStat
+  readonly value: string
+}
+
+export interface LogicSetSetEntry {
+  readonly id: string
+  readonly name: string
+  readonly level: number
+  readonly rarity: LogicSetSetRarity
+  readonly helmet: {
+    readonly iconPath?: string
+    readonly affixes: readonly LogicSetHelmetAffix[]
+  }
+  readonly bonuses: readonly LogicSetSetBonus[]
 }
 
 export const DEFAULT_LOGICSET_MANIFEST_URL =
@@ -292,6 +317,15 @@ export interface LogicSetApi {
     ) => Promise<readonly SocketableEntry[]>
     readonly resetSocketablesToDefaults: () => Promise<
       readonly SocketableEntry[]
+    >
+  }
+  readonly sets: {
+    readonly getSets: () => Promise<readonly LogicSetSetEntry[]>
+    readonly saveSets: (
+      sets: readonly LogicSetSetEntry[]
+    ) => Promise<readonly LogicSetSetEntry[]>
+    readonly resetSetsToDefaults: () => Promise<
+      readonly LogicSetSetEntry[]
     >
   }
   readonly modUpdate: {
