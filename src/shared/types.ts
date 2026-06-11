@@ -1,4 +1,68 @@
-export type NavigationPage = 'environment' | 'saves' | 'mod-update'
+export type NavigationPage =
+  | 'environment'
+  | 'saves'
+  | 'skulls-eyes'
+  | 'mod-update'
+
+export const SOCKETABLE_STATS = [
+  'ALL DAMAGE TAKEN %',
+  'ALL DAMAGE %',
+  'DAMAGE %',
+  'DAMAGE PHYSICAL %',
+  'WEAPON DAMAGE',
+  'WEAPON DAMAGE ELECTRICAL',
+  'WEAPON DAMAGE PHYSICAL',
+  'MELEE WEAPON DAMAGE',
+  'ARMOR FLAT',
+  'MULT-ARMOR FLAT',
+  'DRAW ARMOR BY MONSTER COUNT (MAX 5)',
+  'KNOCKBACK RESISTANCE',
+  'SLOW RESISTANCE',
+  'IMMOB RESISTANCE',
+  'DAMAGE TAKEN %',
+  'ATTACK SPEED',
+  'CAST SPEED',
+  'BLOCK CHANCE',
+  'CRITICAL CHANCE',
+  'CRITICAL DAMAGE',
+  'DODGE',
+  'EXECUTE CHANCE',
+  'DUAL-WIELDING DAMAGE',
+  'FUMBLE CHANCE',
+  'FUMBLE DAMAGE',
+  'HEALTH BONUS',
+  'MANA BONUS',
+  'HEALTH REGEN',
+  'MANA REGEN',
+  'PET HEALTH %',
+  'PET ARMOR %',
+  'PET DAMAGE %',
+  'MISSILES RANGE BONUS',
+  'PROC FULLYHEAL (ON KILL)',
+  'PROC ACID RAIN',
+  'PROC SHADOWLING BAT (ON KILL)',
+  'PROC METEOR STRIKE (ON KILL)',
+  'KNOCKBACK BONUS',
+  'SHORT STUN',
+  'ARMOR DEGREE',
+  'SHIELD BREAK',
+  'CONVEYS DAMAGE',
+  'GOLD DROP',
+  'SPEED %',
+  'XP %'
+] as const
+
+export type SocketableStat = (typeof SOCKETABLE_STATS)[number]
+export type SocketableKind = 'skull' | 'eye'
+
+export interface SocketableEntry {
+  readonly id: string
+  readonly kind: SocketableKind
+  readonly name: string
+  readonly stat: SocketableStat
+  readonly value: string
+  readonly iconPath?: string
+}
 
 export const DEFAULT_LOGICSET_MANIFEST_URL =
   'https://raw.githubusercontent.com/Leon-nis/LogicSet-modpack/main/manifest.json'
@@ -220,6 +284,15 @@ export interface LogicSetApi {
     readonly restore: (
       request: RestoreSaveRequest
     ) => Promise<SaveActionResult>
+  }
+  readonly skullsEyes: {
+    readonly getSocketables: () => Promise<readonly SocketableEntry[]>
+    readonly saveSocketables: (
+      socketables: readonly SocketableEntry[]
+    ) => Promise<readonly SocketableEntry[]>
+    readonly resetSocketablesToDefaults: () => Promise<
+      readonly SocketableEntry[]
+    >
   }
   readonly modUpdate: {
     readonly getInfo: () => Promise<ModUpdateInfo>

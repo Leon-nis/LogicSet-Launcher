@@ -3,11 +3,13 @@ import { Sidebar } from './components/Sidebar'
 import { EnvironmentPage } from './pages/EnvironmentPage'
 import { ModUpdatePage } from './pages/ModUpdatePage'
 import { SavesPage } from './pages/SavesPage'
+import { SkullsEyesPage } from './pages/SkullsEyesPage'
 import type { NavigationPage } from '../../shared/types'
 
 const pages: Record<NavigationPage, React.ComponentType> = {
   environment: EnvironmentPage,
   saves: SavesPage,
+  'skulls-eyes': SkullsEyesPage,
   'mod-update': ModUpdatePage
 }
 

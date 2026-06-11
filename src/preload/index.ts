@@ -35,6 +35,13 @@ const logicSetApi: LogicSetApi = {
       ipcRenderer.invoke('saves:move-to-trash', request),
     restore: (request) => ipcRenderer.invoke('saves:restore', request)
   },
+  skullsEyes: {
+    getSocketables: () => ipcRenderer.invoke('skulls-eyes:get'),
+    saveSocketables: (socketables) =>
+      ipcRenderer.invoke('skulls-eyes:save', socketables),
+    resetSocketablesToDefaults: () =>
+      ipcRenderer.invoke('skulls-eyes:reset')
+  },
   modUpdate: {
     getInfo: () => ipcRenderer.invoke('mod-update:get-info'),
     saveManifestUrl: (request) =>

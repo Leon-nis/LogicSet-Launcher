@@ -22,6 +22,10 @@ import { JsonLocalSettingsService } from './services/local-settings.service'
 import { DefaultModUpdateService } from './services/mod-update.service'
 import { SystemProcessService } from './services/process.service'
 import { DefaultSaveManagerService } from './services/save-manager.service'
+import {
+  isSocketableEntries,
+  JsonSkullsEyesService
+} from './services/skulls-eyes.service'
 import { FileTorchlightSettingsService } from './services/torchlight-settings.service'
 
 const ipcChannels = {
@@ -37,6 +41,9 @@ const ipcChannels = {
   listSaveTrash: 'saves:list-trash',
   moveSaveToTrash: 'saves:move-to-trash',
   restoreSave: 'saves:restore',
+  getSocketables: 'skulls-eyes:get',
+  saveSocketables: 'skulls-eyes:save',
+  resetSocketables: 'skulls-eyes:reset',
   getModUpdateInfo: 'mod-update:get-info',
   saveManifestUrl: 'mod-update:save-manifest-url',
   checkModUpdate: 'mod-update:check',
@@ -221,6 +228,9 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
     join(app.getPath('userData'), 'downloads'),
     join(app.getPath('userData'), 'backups', 'mod-update')
   )
+  const skullsEyesService = new JsonSkullsEyesService(
+    join(app.getPath('userData'), 'skulls-eyes.json')
+  )
 
   ipcMain.handle(ipcChannels.getAnalyticsSettings, () =>
     analyticsService.getSettings()
@@ -326,6 +336,22 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
 
     return saveManagerService.restore(request.trashId)
   })
+  ipcMain.handle(ipcChannels.getSocketables, () =>
+    skullsEyesService.load()
+  )
+  ipcMain.handle(
+    ipcChannels.saveSocketables,
+    (_event, socketables: unknown) => {
+      if (!isSocketableEntries(socketables)) {
+        throw new Error('Invalid skulls and eyes data.')
+      }
+
+      return skullsEyesService.save(socketables)
+    }
+  )
+  ipcMain.handle(ipcChannels.resetSocketables, () =>
+    skullsEyesService.reset()
+  )
   ipcMain.handle(ipcChannels.getModUpdateInfo, () =>
     modUpdateService.getInfo()
   )
