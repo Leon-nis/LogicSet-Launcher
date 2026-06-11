@@ -5,6 +5,12 @@ import { ModUpdatePage } from './pages/ModUpdatePage'
 import { SavesPage } from './pages/SavesPage'
 import { SetsPage } from './pages/SetsPage'
 import { SkullsEyesPage } from './pages/SkullsEyesPage'
+import {
+  BossesPage,
+  MonstersPage,
+  QuestsPage,
+  SkillsPage
+} from './pages/WipPage'
 import type { NavigationPage } from '../../shared/types'
 
 const pages: Record<NavigationPage, React.ComponentType> = {
@@ -12,6 +18,10 @@ const pages: Record<NavigationPage, React.ComponentType> = {
   saves: SavesPage,
   'skulls-eyes': SkullsEyesPage,
   sets: SetsPage,
+  monsters: MonstersPage,
+  bosses: BossesPage,
+  skills: SkillsPage,
+  quests: QuestsPage,
   'mod-update': ModUpdatePage
 }
 

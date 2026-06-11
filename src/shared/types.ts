@@ -3,6 +3,10 @@ export type NavigationPage =
   | 'saves'
   | 'skulls-eyes'
   | 'sets'
+  | 'monsters'
+  | 'bosses'
+  | 'skills'
+  | 'quests'
   | 'mod-update'
 
 export {
