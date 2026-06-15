@@ -16,6 +16,7 @@ import type {
 } from '../shared/types'
 import { DEFAULT_LOGICSET_MANIFEST_URL } from '../shared/types'
 import { PostHogAnalyticsService } from './services/analytics.service'
+import type { AnalyticsService } from './services/analytics.service'
 import { TorchlightGameLaunchService } from './services/game-launch.service'
 import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
@@ -63,6 +64,8 @@ const ipcChannels = {
 } as const
 
 let isDevMode = false
+let analyticsServiceForShutdown: AnalyticsService | null = null
+let isAnalyticsShuttingDown = false
 
 const setDevMode = (enabled: boolean): void => {
   isDevMode = enabled
@@ -266,6 +269,7 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
     settingsService,
     app.getVersion()
   )
+  analyticsServiceForShutdown = analyticsService
   const processService = new SystemProcessService()
   const logService = new JsonLinesLocalLogService(
     join(app.getPath('userData'), 'logicset.log')
@@ -510,4 +514,14 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+app.on('before-quit', (event) => {
+  if (isAnalyticsShuttingDown || analyticsServiceForShutdown === null) {
+    return
+  }
+
+  event.preventDefault()
+  isAnalyticsShuttingDown = true
+  void analyticsServiceForShutdown.shutdown().finally(() => app.exit(0))
 })

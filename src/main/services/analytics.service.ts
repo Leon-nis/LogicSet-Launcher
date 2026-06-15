@@ -1,3 +1,4 @@
+import { PostHog } from 'posthog-node'
 import type {
   AnalyticsEventName,
   AnalyticsEventProperties,
@@ -8,7 +9,6 @@ import type { LocalSettingsService } from './local-settings.service'
 const POSTHOG_PROJECT_TOKEN =
   'phc_ro6juziSeLMcxBiXzdSe2LVUjcb55QQ3fFH9o6tYgrxU'
 const POSTHOG_HOST = 'https://us.i.posthog.com'
-const POSTHOG_CAPTURE_PATH = '/i/v0/e/'
 
 const allowedEvents = new Set<AnalyticsEventName>([
   'analytics_enabled',
@@ -34,9 +34,17 @@ export interface AnalyticsService {
     event: AnalyticsEventName,
     properties?: AnalyticsEventProperties
   ): Promise<void>
+  shutdown(): Promise<void>
 }
 
 export class PostHogAnalyticsService implements AnalyticsService {
+  private readonly client = new PostHog(POSTHOG_PROJECT_TOKEN, {
+    host: POSTHOG_HOST,
+    flushAt: 20,
+    flushInterval: 10_000,
+    requestTimeout: 5_000
+  })
+
   constructor(
     private readonly settingsService: LocalSettingsService,
     private readonly appVersion: string
@@ -79,6 +87,15 @@ export class PostHogAnalyticsService implements AnalyticsService {
     return this.captureEvent(event, properties)
   }
 
+  async shutdown(): Promise<void> {
+    try {
+      await this.client.flush()
+      this.client.shutdown(5_000)
+    } catch {
+      // Analytics must never prevent the launcher from closing.
+    }
+  }
+
   private async captureEvent(
     event: AnalyticsEventName,
     properties: AnalyticsEventProperties = {}
@@ -95,20 +112,15 @@ export class PostHogAnalyticsService implements AnalyticsService {
 
       const sanitizedProperties = sanitizeProperties(properties)
 
-      await fetch(`${POSTHOG_HOST}${POSTHOG_CAPTURE_PATH}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          api_key: POSTHOG_PROJECT_TOKEN,
-          event,
-          distinct_id: settings.analytics.anonymousId,
-          properties: {
-            ...sanitizedProperties,
-            app_version: this.appVersion,
-            os: process.platform
-          }
-        }),
-        signal: AbortSignal.timeout(5_000)
+      this.client.capture({
+        distinctId: settings.analytics.anonymousId,
+        event,
+        properties: {
+          ...sanitizedProperties,
+          app_version: this.appVersion,
+          os: process.platform,
+          $process_person_profile: false
+        }
       })
     } catch {
       // Analytics must never affect launcher behavior.
