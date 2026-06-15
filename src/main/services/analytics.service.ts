@@ -93,6 +93,7 @@ export class PostHogAnalyticsService implements AnalyticsService {
       this.captureEvent('launcher_opened', properties),
       this.captureEvent('launcher_session_started', properties)
     ])
+    await this.flushSafely()
   }
 
   async trackGameLaunched(): Promise<void> {
@@ -124,10 +125,18 @@ export class PostHogAnalyticsService implements AnalyticsService {
   async shutdown(): Promise<void> {
     try {
       await this.endSession()
-      await this.client.flush()
+      await this.flushSafely()
       this.client.shutdown(5_000)
     } catch {
       // Analytics must never prevent the launcher from closing.
+    }
+  }
+
+  private async flushSafely(): Promise<void> {
+    try {
+      await this.client.flush()
+    } catch {
+      // Network failures must not affect launcher behavior.
     }
   }
 
