@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ButtonRow } from '../components/ButtonRow'
 import { FieldRow } from '../components/FieldRow'
+import { ModUpdatePanel } from '../components/ModUpdatePanel'
 import { PageLayout } from '../components/PageLayout'
 import { SavesPage } from './SavesPage'
 import type {
-  AnalyticsSettings,
   GamePathKey,
   GamePaths,
   LocalSettings,
@@ -62,12 +62,6 @@ const emptyValidation: PathValidation = {
   localSettingsPath: false
 }
 
-const emptyAnalyticsSettings: AnalyticsSettings = {
-  enabled: false,
-  anonymousId: '',
-  userActivated: false
-}
-
 type HomeOverlay = 'paths' | 'saves' | null
 
 export const HomePage = (): React.JSX.Element => {
@@ -81,9 +75,7 @@ export const HomePage = (): React.JSX.Element => {
       installedVersion: null
     })
   const [analyticsSettings, setAnalyticsSettings] =
-    useState<AnalyticsSettings>(emptyAnalyticsSettings)
-  const [isSavingAnalytics, setIsSavingAnalytics] = useState(false)
-  const [analyticsError, setAnalyticsError] = useState<string | null>(null)
+    useState<LocalSettings['analytics'] | null>(null)
   const [isSavedExecutableValid, setIsSavedExecutableValid] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -222,6 +214,12 @@ export const HomePage = (): React.JSX.Element => {
     setMessage(null)
     setError(null)
 
+    if (analyticsSettings === null) {
+      setError('Could not save before configuration finished loading.')
+      setIsSaving(false)
+      return
+    }
+
     const settings: LocalSettings = {
       schemaVersion: 1,
       gamePaths: paths,
@@ -245,21 +243,6 @@ export const HomePage = (): React.JSX.Element => {
       setError('Could not save the path configuration.')
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  const setAnalyticsEnabled = async (enabled: boolean): Promise<void> => {
-    setIsSavingAnalytics(true)
-    setAnalyticsError(null)
-
-    try {
-      const savedSettings =
-        await window.logicSet.analytics.setEnabled(enabled)
-      setAnalyticsSettings(savedSettings)
-    } catch {
-      setAnalyticsError('Could not save the analytics preference.')
-    } finally {
-      setIsSavingAnalytics(false)
     }
   }
 
@@ -402,32 +385,7 @@ export const HomePage = (): React.JSX.Element => {
         </button>
       </section>
 
-      {!isLoading && (
-        <section className="analytics-panel">
-          <div className="analytics-copy">
-            <span className="eyebrow">Privacy</span>
-            <h2>Anonymous analytics</h2>
-            <p>
-              Sends anonymous launcher usage events. Does not send paths,
-              save files, character names, or file contents.
-            </p>
-            {analyticsError && (
-              <p className="form-message error">{analyticsError}</p>
-            )}
-          </div>
-          <label className="analytics-toggle">
-            <input
-              type="checkbox"
-              checked={analyticsSettings.enabled}
-              disabled={isSavingAnalytics}
-              onChange={(event) =>
-                void setAnalyticsEnabled(event.target.checked)
-              }
-            />
-            <span>Enable anonymous analytics</span>
-          </label>
-        </section>
-      )}
+      {!isLoading && <ModUpdatePanel />}
 
       {!isLoading && (
         <section className="udp-port-panel">

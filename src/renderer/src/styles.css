@@ -276,66 +276,12 @@ button:focus-visible {
 .socketables-panel,
 .sets-panel,
 .saves-panel,
-.udp-port-panel,
-.analytics-panel {
+.udp-port-panel {
   min-width: 0;
 }
 
-.analytics-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+.mod-update-panel {
   margin-top: 10px;
-  padding: 15px 18px;
-  border: 1px solid #232f3b;
-  border-radius: 16px;
-  background: linear-gradient(145deg, #121a23, #0e151d);
-  box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
-}
-
-.analytics-copy {
-  min-width: 0;
-}
-
-.analytics-copy h2 {
-  margin: 5px 0 4px;
-  font-size: 16px;
-}
-
-.analytics-copy > p:not(.form-message) {
-  max-width: 620px;
-  margin: 0;
-  color: #8f9baa;
-  font-size: 13px;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-
-.analytics-copy .form-message {
-  margin-top: 10px;
-}
-
-.analytics-toggle {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 10px;
-  color: #dbe3eb;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.analytics-toggle input {
-  width: 18px;
-  height: 18px;
-  accent-color: #65d2b3;
-  cursor: pointer;
-}
-
-.analytics-toggle input:disabled {
-  cursor: wait;
 }
 
 .placeholder-card {
@@ -1055,6 +1001,7 @@ button:focus-visible {
 }
 
 .mod-update-panel {
+  max-width: 100%;
   overflow: hidden;
   border: 1px solid #232f3b;
   border-radius: 16px;
@@ -1174,6 +1121,10 @@ button:focus-visible {
   min-width: 0;
   grid-template-columns: minmax(0, 1fr) auto auto auto;
   gap: 10px;
+}
+
+.manifest-url-row > * {
+  min-width: 0;
 }
 
 .manifest-url-row input {
@@ -2033,11 +1984,6 @@ button:focus-visible {
 
   .game-launch-panel {
     align-items: stretch;
-    flex-direction: column;
-  }
-
-  .analytics-panel {
-    align-items: flex-start;
     flex-direction: column;
   }
 

@@ -61,6 +61,7 @@ const ipcChannels = {
 } as const
 
 let isDevMode = false
+let isAnalyticsEnabled = false
 let analyticsServiceForShutdown: AnalyticsService | null = null
 let isAnalyticsShuttingDown = false
 
@@ -93,6 +94,18 @@ const createApplicationMenu = (): void => {
           type: 'checkbox',
           checked: isDevMode,
           click: (menuItem) => setDevMode(menuItem.checked)
+        },
+        {
+          id: 'anonymous-analytics',
+          label: 'Anonymous Analytics',
+          type: 'checkbox',
+          checked: isAnalyticsEnabled,
+          click: (menuItem) => {
+            const enabled = menuItem.checked
+            void setAnalyticsEnabled(enabled).catch(() => {
+              menuItem.checked = !enabled
+            })
+          }
         }
       ]
     },
@@ -115,6 +128,22 @@ const createApplicationMenu = (): void => {
     }
   ])
   Menu.setApplicationMenu(menu)
+}
+
+const setAnalyticsEnabled = async (enabled: boolean): Promise<void> => {
+  if (analyticsServiceForShutdown === null) {
+    throw new Error('Analytics service is not available.')
+  }
+
+  const settings =
+    await analyticsServiceForShutdown.setEnabled(enabled)
+  isAnalyticsEnabled = settings.enabled
+
+  const menuItem =
+    Menu.getApplicationMenu()?.getMenuItemById('anonymous-analytics')
+  if (menuItem) {
+    menuItem.checked = settings.enabled
+  }
 }
 
 const createDefaultSettings = (): LocalSettings => {
@@ -265,6 +294,7 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
     app.getVersion()
   )
   analyticsServiceForShutdown = analyticsService
+  isAnalyticsEnabled = (await analyticsService.getSettings()).enabled
   const processService = new SystemProcessService()
   const logService = new JsonLinesLocalLogService(
     join(app.getPath('userData'), 'logicset.log')
@@ -309,7 +339,9 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
         throw new Error('Invalid analytics setting.')
       }
 
-      return analyticsService.setEnabled(enabled)
+      return setAnalyticsEnabled(enabled).then(() =>
+        analyticsService.getSettings()
+      )
     }
   )
   ipcMain.handle(ipcChannels.loadConfig, () => settingsService.load())
@@ -319,10 +351,7 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
       const currentSettings = await settingsService.load()
       return settingsService.save({
         ...settings,
-        analytics: {
-          ...settings.analytics,
-          userActivated: currentSettings.analytics.userActivated
-        }
+        analytics: currentSettings.analytics
       })
     }
   )

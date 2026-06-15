@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { HomePage } from './pages/HomePage'
-import { ModUpdatePage } from './pages/ModUpdatePage'
 import { SetsPage } from './pages/SetsPage'
 import { SkullsEyesPage } from './pages/SkullsEyesPage'
 import {
@@ -20,8 +19,7 @@ const pages: Record<NavigationPage, React.ComponentType> = {
   monsters: MonstersPage,
   bosses: BossesPage,
   skills: SkillsPage,
-  quests: QuestsPage,
-  'mod-update': ModUpdatePage
+  quests: QuestsPage
 }
 
 export const App = (): React.JSX.Element => {

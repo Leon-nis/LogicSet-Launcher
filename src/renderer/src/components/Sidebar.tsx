@@ -19,8 +19,7 @@ const navigationItems: readonly NavigationItem[] = [
   { id: 'monsters', label: 'Monsters', marker: 'MO', isLocked: true },
   { id: 'bosses', label: 'Bosses', marker: 'BO', isLocked: true },
   { id: 'skills', label: 'Skills', marker: 'SK', isLocked: true },
-  { id: 'quests', label: 'Quests', marker: 'QU', isLocked: true },
-  { id: 'mod-update', label: 'Mod Update', marker: 'UP' }
+  { id: 'quests', label: 'Quests', marker: 'QU', isLocked: true }
 ]
 
 export const Sidebar = ({

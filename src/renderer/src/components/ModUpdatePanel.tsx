@@ -4,7 +4,6 @@ import type {
   ModUpdateInfo
 } from '../../../shared/types'
 import { DEFAULT_LOGICSET_MANIFEST_URL } from '../../../shared/types'
-import { PageLayout } from '../components/PageLayout'
 import { useDevMode } from '../contexts/DevModeContext'
 
 const emptyInfo: ModUpdateInfo = {
@@ -16,7 +15,7 @@ const emptyInfo: ModUpdateInfo = {
 
 type UpdateOperation = 'saving' | 'checking' | 'installing' | null
 
-export const ModUpdatePage = (): React.JSX.Element => {
+export const ModUpdatePanel = (): React.JSX.Element => {
   const supportsModUpdateApi =
     typeof window.logicSet.modUpdate?.getInfo === 'function' &&
     typeof window.logicSet.modUpdate?.saveManifestUrl === 'function' &&
@@ -136,177 +135,171 @@ export const ModUpdatePage = (): React.JSX.Element => {
     info.installationStatus !== 'up-to-date'
 
   return (
-    <PageLayout
-      eyebrow="LogicSet"
-      title="Mod Update"
-      description="Check the stable LogicSet manifest and install a verified modpack into the configured mods folder."
-    >
-      <section className="mod-update-panel" aria-busy={isLoading || isBusy}>
-        {!isDevMode && (
+    <section className="mod-update-panel" aria-busy={isLoading || isBusy}>
+      {!isDevMode && (
+        <div
+          className="mod-player-compact"
+          data-status={info.installationStatus}
+        >
+          <span className="mod-status-indicator" aria-hidden="true" />
           <div
-            className="mod-player-compact"
-            data-status={info.installationStatus}
+            className="mod-player-compact-copy"
+            aria-live="polite"
           >
-            <span className="mod-status-indicator" aria-hidden="true" />
-            <div
-              className="mod-player-compact-copy"
-              aria-live="polite"
+            <span className="eyebrow">LogicSet mod</span>
+            <h2>{formatInstallationStatus(info.installationStatus)}</h2>
+            <p>
+              {getCompactStatusDescription(
+                info,
+                operation,
+                message,
+                error
+              )}
+            </p>
+          </div>
+          <div className="mod-player-compact-actions">
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={isLoading || isBusy || !supportsModUpdateApi}
+              onClick={() => void checkUpdate()}
             >
-              <span className="eyebrow">LogicSet mod</span>
-              <h2>{formatInstallationStatus(info.installationStatus)}</h2>
+              {operation === 'checking' ? 'Checking...' : 'Check'}
+            </button>
+            {canInstall && (
+              <button
+                className="primary-button"
+                type="button"
+                disabled={isBusy || !supportsModUpdateApi}
+                onClick={() => void installUpdate()}
+              >
+                {operation === 'installing' ? 'Updating...' : 'Update'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isDevMode && (
+        <>
+          <div className="mod-update-toolbar">
+            <div>
+              <h2>LogicSet status</h2>
+              <p>Advanced updater and manifest settings.</p>
+            </div>
+          </div>
+          <div className="manifest-settings">
+            <div className="manifest-settings-copy">
+              <h2>Remote manifest</h2>
               <p>
-                {getCompactStatusDescription(
-                  info,
-                  operation,
-                  message,
-                  error
-                )}
+                The launcher only checks this URL when requested. Updates
+                are never installed automatically.
               </p>
             </div>
-            <div className="mod-player-compact-actions">
+            <label htmlFor="manifestUrl">Manifest URL</label>
+            <div className="manifest-url-row">
+              <input
+                id="manifestUrl"
+                type="url"
+                value={manifestUrl}
+                disabled={
+                  isLoading || isBusy || !supportsModUpdateApi
+                }
+                placeholder={DEFAULT_LOGICSET_MANIFEST_URL}
+                spellCheck={false}
+                onChange={(event) => {
+                  setManifestUrl(event.target.value)
+                  setMessage(null)
+                  setError(null)
+                }}
+              />
               <button
                 className="secondary-button"
                 type="button"
-                disabled={isLoading || isBusy || !supportsModUpdateApi}
+                disabled={
+                  isLoading || isBusy || !supportsModUpdateApi
+                }
+                onClick={() => void resetManifestUrl()}
+              >
+                Reset to default
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                disabled={
+                  isLoading || isBusy || !supportsModUpdateApi
+                }
+                onClick={() => void saveManifestUrl()}
+              >
+                {operation === 'saving'
+                  ? 'Saving...'
+                  : 'Save Manifest URL'}
+              </button>
+              <button
+                className="primary-button"
+                type="button"
+                disabled={
+                  isLoading || isBusy || !supportsModUpdateApi
+                }
                 onClick={() => void checkUpdate()}
               >
-                {operation === 'checking' ? 'Checking...' : 'Check'}
+                {operation === 'checking'
+                  ? 'Checking...'
+                  : 'Check Update'}
               </button>
-              {canInstall && (
-                <button
-                  className="primary-button"
-                  type="button"
-                  disabled={isBusy || !supportsModUpdateApi}
-                  onClick={() => void installUpdate()}
-                >
-                  {operation === 'installing' ? 'Updating...' : 'Update'}
-                </button>
-              )}
             </div>
           </div>
-        )}
 
-        {isDevMode && (
-          <>
-            <div className="mod-update-toolbar">
-              <div>
-                <h2>LogicSet status</h2>
-                <p>Advanced updater and manifest settings.</p>
-              </div>
-            </div>
-            <div className="manifest-settings">
-              <div className="manifest-settings-copy">
-                <h2>Remote manifest</h2>
-                <p>
-                  The launcher only checks this URL when requested. Updates
-                  are never installed automatically.
+          <div className="mod-version-grid">
+            <VersionCard
+              label="Installed version"
+              value={info.installedVersion ?? 'Not installed'}
+            />
+            <VersionCard
+              label="Remote version"
+              value={info.manifest?.version ?? 'Not checked'}
+            />
+            <VersionCard
+              label="Channel"
+              value={info.manifest?.channel ?? 'Unknown'}
+            />
+          </div>
+
+          <ManifestDetails manifest={info.manifest} />
+
+          <div className="mod-update-actions">
+            <div className="mod-update-feedback" aria-live="polite">
+              {isLoading && (
+                <p className="form-message">
+                  Loading updater settings...
                 </p>
-              </div>
-              <label htmlFor="manifestUrl">Manifest URL</label>
-              <div className="manifest-url-row">
-                <input
-                  id="manifestUrl"
-                  type="url"
-                  value={manifestUrl}
-                  disabled={
-                    isLoading || isBusy || !supportsModUpdateApi
-                  }
-                  placeholder={DEFAULT_LOGICSET_MANIFEST_URL}
-                  spellCheck={false}
-                  onChange={(event) => {
-                    setManifestUrl(event.target.value)
-                    setMessage(null)
-                    setError(null)
-                  }}
-                />
-                <button
-                  className="secondary-button"
-                  type="button"
-                  disabled={
-                    isLoading || isBusy || !supportsModUpdateApi
-                  }
-                  onClick={() => void resetManifestUrl()}
-                >
-                  Reset to default
-                </button>
-                <button
-                  className="secondary-button"
-                  type="button"
-                  disabled={
-                    isLoading || isBusy || !supportsModUpdateApi
-                  }
-                  onClick={() => void saveManifestUrl()}
-                >
-                  {operation === 'saving'
-                    ? 'Saving...'
-                    : 'Save Manifest URL'}
-                </button>
-                <button
-                  className="primary-button"
-                  type="button"
-                  disabled={
-                    isLoading || isBusy || !supportsModUpdateApi
-                  }
-                  onClick={() => void checkUpdate()}
-                >
-                  {operation === 'checking'
-                    ? 'Checking...'
-                    : 'Check Update'}
-                </button>
-              </div>
-            </div>
-
-            <div className="mod-version-grid">
-              <VersionCard
-                label="Installed version"
-                value={info.installedVersion ?? 'Not installed'}
-              />
-              <VersionCard
-                label="Remote version"
-                value={info.manifest?.version ?? 'Not checked'}
-              />
-              <VersionCard
-                label="Channel"
-                value={info.manifest?.channel ?? 'Unknown'}
-              />
-            </div>
-
-            <ManifestDetails manifest={info.manifest} />
-
-            <div className="mod-update-actions">
-              <div className="mod-update-feedback" aria-live="polite">
-                {isLoading && (
-                  <p className="form-message">
-                    Loading updater settings...
-                  </p>
-                )}
-                {operation === 'installing' && (
-                  <p className="form-message">
-                    Downloading, verifying, and installing the modpack...
-                  </p>
-                )}
-                {message && (
-                  <p className="form-message success">{message}</p>
-                )}
-                {error && <p className="form-message error">{error}</p>}
-              </div>
-              {canInstall && (
-                <button
-                  className="primary-button install-update-button"
-                  type="button"
-                  disabled={isBusy || !supportsModUpdateApi}
-                  onClick={() => void installUpdate()}
-                >
-                  {operation === 'installing'
-                    ? 'Installing...'
-                    : 'Install Update'}
-                </button>
               )}
+              {operation === 'installing' && (
+                <p className="form-message">
+                  Downloading, verifying, and installing the modpack...
+                </p>
+              )}
+              {message && (
+                <p className="form-message success">{message}</p>
+              )}
+              {error && <p className="form-message error">{error}</p>}
             </div>
-          </>
-        )}
-      </section>
-    </PageLayout>
+            {canInstall && (
+              <button
+                className="primary-button install-update-button"
+                type="button"
+                disabled={isBusy || !supportsModUpdateApi}
+                onClick={() => void installUpdate()}
+              >
+                {operation === 'installing'
+                  ? 'Installing...'
+                  : 'Install Update'}
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </section>
   )
 }
 

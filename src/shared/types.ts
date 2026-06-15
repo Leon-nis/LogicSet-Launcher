@@ -6,7 +6,6 @@ export type NavigationPage =
   | 'bosses'
   | 'skills'
   | 'quests'
-  | 'mod-update'
 
 export {
   DEFAULT_SOCKETABLE_STAT,
