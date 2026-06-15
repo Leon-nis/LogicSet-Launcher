@@ -1558,7 +1558,7 @@ button:focus-visible {
   padding: 3px 7px;
   border: 1px solid #48627e;
   border-radius: 999px;
-  color: #a9c6e7;
+  color: #3979bd;
   background: #172536;
   font-size: 9px;
   font-weight: 800;
@@ -1567,15 +1567,39 @@ button:focus-visible {
 }
 
 .set-rarity[data-rarity="unique"] {
-  border-color: #76518b;
-  color: #d3a9e9;
-  background: #281b30;
+  border-color: #8f581f;
+  color: #ed8b2f;
+  background: #2e2115;
 }
 
 .set-rarity[data-rarity="legendary"] {
-  border-color: #7b6032;
-  color: #e5c27f;
-  background: #2c2416;
+  border-color: #873d43;
+  color: #df4f58;
+  background: #2d191c;
+}
+
+.set-rarity-field[data-rarity="rare"] {
+  color: #3979bd;
+}
+
+.set-row select[data-rarity="rare"] {
+  color: #3979bd;
+}
+
+.set-rarity-field[data-rarity="unique"] {
+  color: #ed8b2f;
+}
+
+.set-row select[data-rarity="unique"] {
+  color: #ed8b2f;
+}
+
+.set-rarity-field[data-rarity="legendary"] {
+  color: #df4f58;
+}
+
+.set-row select[data-rarity="legendary"] {
+  color: #df4f58;
 }
 
 .set-expanded {
@@ -1612,6 +1636,10 @@ button:focus-visible {
   grid-template-columns:
     minmax(180px, 1fr) 80px 120px 110px minmax(160px, 0.8fr);
   gap: 8px;
+}
+
+.set-general-grid[data-dev-mode="false"] {
+  grid-template-columns: minmax(180px, 1fr) 80px 120px;
 }
 
 .set-general-grid label,
@@ -2087,7 +2115,7 @@ button:focus-visible {
     grid-template-columns: auto auto minmax(120px, 1fr) auto;
   }
 
-  .set-summary > span:nth-last-child(-n + 2) {
+  .set-summary > span:last-child {
     display: none;
   }
 

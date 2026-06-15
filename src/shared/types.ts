@@ -47,6 +47,7 @@ export interface LogicSetSetEntry {
   readonly id: string
   readonly name: string
   readonly level: number
+  readonly range: string
   readonly rarity: LogicSetSetRarity
   readonly helmet: {
     readonly isSpecial: boolean

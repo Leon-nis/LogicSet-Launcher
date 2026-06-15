@@ -71,6 +71,7 @@ export const SetsPage = (): React.JSX.Element => {
         id,
         name: '',
         level: 0,
+        range: '1-99',
         rarity: 'rare',
         helmet: { isSpecial: false, affixes: [] },
         bonuses: []
@@ -248,14 +249,11 @@ const SetRow = ({
   onRemove
 }: SetRowProps): React.JSX.Element => {
   const disabled = !isDevMode || isBusy
-  const bonusSummary = set.bonuses
-    .map((bonus) => bonus.pieces)
-    .sort((left, right) => left - right)
-    .join(', ')
+  const maximumBonusPieces = getMaximumBonusPieces(set.bonuses)
 
   const updateDetails = (
     changes: Partial<
-      Pick<LogicSetSetEntry, 'name' | 'level' | 'rarity'>
+      Pick<LogicSetSetEntry, 'name' | 'level' | 'range' | 'rarity'>
     >
   ): void => onChange({ ...set, ...changes })
 
@@ -332,8 +330,8 @@ const SetRow = ({
         <span className="set-rarity" data-rarity={set.rarity}>
           {formatRarity(set.rarity)}
         </span>
-        <span>Bonuses: {bonusSummary || 'None'}</span>
-        <span>Helmet Special: {set.helmet.isSpecial ? '✓' : '—'}</span>
+        <span>({maximumBonusPieces || '—'})</span>
+        <span>Lv {set.range || 'Not set'}</span>
       </button>
 
       {isExpanded && (
@@ -352,7 +350,7 @@ const SetRow = ({
                 </button>
               )}
             </div>
-            <div className="set-general-grid">
+            <div className="set-general-grid" data-dev-mode={isDevMode}>
               <label>
                 <span>Name</span>
                 <input
@@ -377,40 +375,60 @@ const SetRow = ({
               </label>
               <label>
                 <span>Rarity</span>
-                <select
-                  value={set.rarity}
-                  disabled={disabled}
-                  onChange={(event) =>
-                    updateDetails({
-                      rarity: event.target.value as LogicSetSetRarity
-                    })
-                  }
-                >
-                  <option value="rare">Rare</option>
-                  <option value="unique">Unique</option>
-                  <option value="legendary">Legendary</option>
-                </select>
-              </label>
-              <label>
-                <span>Bonus Pieces</span>
-                <div className="set-readonly-field">
-                  {bonusSummary || 'None'}
-                </div>
-              </label>
-              <label className="general-helmet-toggle">
-                <span>Unique Helmet / Fixed Affixes</span>
-                <span className="helmet-special-toggle">
-                  <input
-                    type="checkbox"
-                    checked={set.helmet.isSpecial}
-                    disabled={disabled}
+                {isDevMode ? (
+                  <select
+                    value={set.rarity}
+                    data-rarity={set.rarity}
+                    disabled={isBusy}
                     onChange={(event) =>
-                      updateHelmet({ isSpecial: event.target.checked })
+                      updateDetails({
+                        rarity: event.target.value as LogicSetSetRarity
+                      })
+                    }
+                  >
+                    <option value="rare">Rare</option>
+                    <option value="unique">Unique</option>
+                    <option value="legendary">Legendary</option>
+                  </select>
+                ) : (
+                  <div
+                    className="set-readonly-field set-rarity-field"
+                    data-rarity={set.rarity}
+                  >
+                    {formatRarity(set.rarity)}
+                  </div>
+                )}
+              </label>
+              {isDevMode && (
+                <label>
+                  <span>Range</span>
+                  <input
+                    type="text"
+                    value={set.range}
+                    disabled={isBusy}
+                    placeholder="1-99"
+                    onChange={(event) =>
+                      updateDetails({ range: event.target.value })
                     }
                   />
-                  <span>Enabled</span>
-                </span>
-              </label>
+                </label>
+              )}
+              {isDevMode && (
+                <label className="general-helmet-toggle">
+                  <span>Unique Helmet / Fixed Affixes</span>
+                  <span className="helmet-special-toggle">
+                    <input
+                      type="checkbox"
+                      checked={set.helmet.isSpecial}
+                      disabled={isBusy}
+                      onChange={(event) =>
+                        updateHelmet({ isSpecial: event.target.checked })
+                      }
+                    />
+                    <span>Enabled</span>
+                  </span>
+                </label>
+              )}
             </div>
           </section>
 
@@ -704,6 +722,10 @@ const createSetId = (sets: readonly LogicSetSetEntry[]): string => {
 
 const formatRarity = (rarity: LogicSetSetRarity): string =>
   rarity.charAt(0).toUpperCase() + rarity.slice(1)
+
+const getMaximumBonusPieces = (
+  bonuses: readonly LogicSetSetBonus[]
+): number => Math.max(0, ...bonuses.map((bonus) => bonus.pieces))
 
 const formatError = (message: string, error: unknown): string =>
   `${message} ${error instanceof Error ? error.message : String(error)}`

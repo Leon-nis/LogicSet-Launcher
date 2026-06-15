@@ -41,6 +41,7 @@ export const DEFAULT_LOGICSET_SETS: readonly LogicSetSetEntry[] =
     id,
     name,
     level,
+    range: '1-99',
     rarity: 'rare',
     helmet: {
       isSpecial: false,
@@ -120,6 +121,7 @@ const isLogicSetSetEntry = (value: unknown): value is LogicSetSetEntry => {
     value.id.trim() !== '' &&
     typeof value.name === 'string' &&
     isFiniteNumber(value.level) &&
+    typeof value.range === 'string' &&
     (value.rarity === 'rare' ||
       value.rarity === 'unique' ||
       value.rarity === 'legendary') &&
@@ -186,6 +188,7 @@ const normalizeSetEntries = (
 
     return {
       ...set,
+      range: typeof set.range === 'string' ? set.range : '1-99',
       helmet: {
         ...set.helmet,
         isSpecial:
