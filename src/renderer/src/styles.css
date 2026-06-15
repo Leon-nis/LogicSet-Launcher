@@ -430,6 +430,157 @@ button:focus-visible {
   margin-top: 6px;
 }
 
+.home-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.home-shortcut {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 18px;
+  border: 1px solid #283745;
+  border-radius: 16px;
+  color: #dfe7ef;
+  background: linear-gradient(145deg, #121a23, #0e151d);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.home-shortcut:hover {
+  border-color: #3e756d;
+  background: linear-gradient(145deg, #15221f, #101a20);
+  transform: translateY(-1px);
+}
+
+.home-shortcut-icon {
+  display: grid;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid #35685f;
+  border-radius: 13px;
+  color: #8de8cf;
+  background: #16312d;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.home-shortcut > span:last-child {
+  min-width: 0;
+}
+
+.home-shortcut strong,
+.home-shortcut small {
+  display: block;
+}
+
+.home-shortcut strong {
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.home-shortcut small {
+  color: #8491a0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.overlay-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(4 8 12 / 76%);
+  backdrop-filter: blur(8px);
+}
+
+.overlay-dialog {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #30404e;
+  border-radius: 18px;
+  background: #0e151d;
+  box-shadow: 0 28px 90px rgb(0 0 0 / 55%);
+}
+
+.overlay-dialog-wide {
+  width: min(1040px, 100%);
+}
+
+.overlay-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 22px 18px;
+}
+
+.overlay-header h2 {
+  margin: 6px 0 5px;
+  color: #f3f7fb;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+}
+
+.overlay-header p {
+  margin: 0;
+  color: #8f9baa;
+  font-size: 13px;
+}
+
+.overlay-close {
+  flex: none;
+  padding: 8px 11px;
+  border: 1px solid #334251;
+  border-radius: 8px;
+  color: #c2ccd6;
+  background: #18222c;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.overlay-close:hover {
+  border-color: #496071;
+  background: #1d2935;
+}
+
+.overlay-close-floating {
+  position: absolute;
+  z-index: 2;
+  top: 24px;
+  right: 24px;
+}
+
+.overlay-dialog > .environment-panel {
+  margin: 0 22px 22px;
+}
+
+.overlay-dialog > .page {
+  width: 100%;
+  padding: 24px;
+}
+
+.overlay-dialog > .page .page-header {
+  padding-right: 82px;
+}
+
 .play-button {
   flex: none;
   min-width: 160px;
@@ -1738,6 +1889,35 @@ button:focus-visible {
 }
 
 @media (max-width: 900px) {
+  .home-shortcuts {
+    grid-template-columns: 1fr;
+  }
+
+  .overlay-backdrop {
+    padding: 12px;
+  }
+
+  .overlay-dialog {
+    max-height: calc(100vh - 24px);
+  }
+
+  .overlay-header {
+    padding: 18px;
+  }
+
+  .overlay-dialog > .environment-panel {
+    margin: 0 18px 18px;
+  }
+
+  .overlay-dialog > .page {
+    padding: 20px 18px;
+  }
+
+  .overlay-close-floating {
+    top: 20px;
+    right: 18px;
+  }
+
   .field-row-controls {
     grid-template-columns: 1fr;
   }

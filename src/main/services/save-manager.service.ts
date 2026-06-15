@@ -81,16 +81,29 @@ export class DefaultSaveManagerService implements SaveManagerService {
       const entries = await readdir(savesDirectoryPath, {
         withFileTypes: true
       })
-      const files = entries.filter((entry) => entry.isFile())
+      const files = entries
+        .filter((entry) => entry.isFile())
+        .map((entry) => ({
+          entry,
+          kind: classifySaveFile(entry.name)
+        }))
+        .filter(
+          (
+            file
+          ): file is {
+            entry: (typeof entries)[number]
+            kind: Exclude<SaveFileKind, 'unknown'>
+          } => file.kind !== 'unknown'
+        )
       const saves = await Promise.all(
-        files.map(async (entry): Promise<SaveFile> => {
+        files.map(async ({ entry, kind }): Promise<SaveFile> => {
           const fullPath = join(savesDirectoryPath, entry.name)
           const fileStats = await stat(fullPath)
 
           return {
             fileName: entry.name,
             fullPath,
-            kind: classifySaveFile(entry.name),
+            kind,
             sizeBytes: fileStats.size,
             modifiedAt: fileStats.mtime.toISOString()
           }

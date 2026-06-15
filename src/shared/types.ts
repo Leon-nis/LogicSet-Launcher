@@ -1,6 +1,5 @@
 export type NavigationPage =
-  | 'environment'
-  | 'saves'
+  | 'home'
   | 'skulls-eyes'
   | 'sets'
   | 'monsters'

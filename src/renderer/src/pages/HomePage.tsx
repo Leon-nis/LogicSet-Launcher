@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ButtonRow } from '../components/ButtonRow'
 import { FieldRow } from '../components/FieldRow'
 import { PageLayout } from '../components/PageLayout'
+import { SavesPage } from './SavesPage'
 import type {
   AnalyticsSettings,
   GamePathKey,
@@ -66,7 +67,10 @@ const emptyAnalyticsSettings: AnalyticsSettings = {
   anonymousId: ''
 }
 
-export const EnvironmentPage = (): React.JSX.Element => {
+type HomeOverlay = 'paths' | 'saves' | null
+
+export const HomePage = (): React.JSX.Element => {
+  const [activeOverlay, setActiveOverlay] = useState<HomeOverlay>(null)
   const [paths, setPaths] = useState<GamePaths>(emptyPaths)
   const [validation, setValidation] =
     useState<PathValidation>(emptyValidation)
@@ -153,6 +157,21 @@ export const EnvironmentPage = (): React.JSX.Element => {
     void load()
   }, [loadUdpPort, refreshValidation])
 
+  useEffect(() => {
+    if (activeOverlay === null) {
+      return
+    }
+
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        setActiveOverlay(null)
+      }
+    }
+
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [activeOverlay])
+
   const updatePath = (key: GamePathKey, value: string): void => {
     setPaths((current) => ({ ...current, [key]: value }))
     setValidation((current) => ({ ...current, [key]: false }))
@@ -220,9 +239,9 @@ export const EnvironmentPage = (): React.JSX.Element => {
       setIsSavedExecutableValid(
         savedValidation.torchlightExecutablePath
       )
-      setMessage('Environment configuration saved.')
+      setMessage('Path configuration saved.')
     } catch {
-      setError('Could not save the local environment configuration.')
+      setError('Could not save the path configuration.')
     } finally {
       setIsSaving(false)
     }
@@ -317,9 +336,9 @@ export const EnvironmentPage = (): React.JSX.Element => {
 
   return (
     <PageLayout
-      eyebrow="Setup"
-      title="Environment"
-      description="Configure the local Torchlight II installation and the paths used by LogicSet."
+      eyebrow="Launcher"
+      title="Home"
+      description="Launch Torchlight II and manage the local LogicSet configuration."
     >
       {!isLoading && (
         <section className="game-launch-panel">
@@ -353,48 +372,33 @@ export const EnvironmentPage = (): React.JSX.Element => {
         </section>
       )}
 
-      <section className="environment-panel" aria-busy={isLoading}>
-        {isLoading ? (
-          <p className="environment-loading">Loading configuration...</p>
-        ) : (
-          <>
-            <div className="field-list">
-              {pathFields.map((field) => (
-                <FieldRow
-                  key={field.key}
-                  id={field.key}
-                  label={field.label}
-                  description={field.description}
-                  value={paths[field.key]}
-                  isValid={validation[field.key]}
-                  onChange={(event) =>
-                    updatePath(field.key, event.target.value)
-                  }
-                  onBlur={() => void handlePathBlur(field)}
-                  onBrowse={() => void browse(field)}
-                />
-              ))}
-            </div>
-
-            <ButtonRow
-              feedback={
-                <>
-                {message && <p className="form-message success">{message}</p>}
-                {error && <p className="form-message error">{error}</p>}
-                </>
-              }
-            >
-              <button
-                className="primary-button"
-                type="button"
-                disabled={isSaving}
-                onClick={() => void save()}
-              >
-                {isSaving ? 'Saving...' : 'Save'}
-              </button>
-            </ButtonRow>
-          </>
-        )}
+      <section className="home-shortcuts" aria-label="Quick actions">
+        <button
+          className="home-shortcut"
+          type="button"
+          onClick={() => setActiveOverlay('saves')}
+        >
+          <span className="home-shortcut-icon" aria-hidden="true">
+            SV
+          </span>
+          <span>
+            <strong>Saves</strong>
+            <small>Manage characters and shared stash</small>
+          </span>
+        </button>
+        <button
+          className="home-shortcut"
+          type="button"
+          onClick={() => setActiveOverlay('paths')}
+        >
+          <span className="home-shortcut-icon" aria-hidden="true">
+            PA
+          </span>
+          <span>
+            <strong>Paths</strong>
+            <small>Configure game files and folders</small>
+          </span>
+        </button>
       </section>
 
       {!isLoading && (
@@ -474,6 +478,118 @@ export const EnvironmentPage = (): React.JSX.Element => {
             </div>
           </div>
         </section>
+      )}
+
+      {activeOverlay === 'paths' && (
+        <div
+          className="overlay-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setActiveOverlay(null)
+            }
+          }}
+        >
+          <section
+            className="overlay-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="paths-dialog-title"
+          >
+            <header className="overlay-header">
+              <div>
+                <span className="eyebrow">Configuration</span>
+                <h2 id="paths-dialog-title">Paths</h2>
+                <p>Configure the local Torchlight II files and folders.</p>
+              </div>
+              <button
+                className="overlay-close"
+                type="button"
+                aria-label="Close paths"
+                onClick={() => setActiveOverlay(null)}
+              >
+                Close
+              </button>
+            </header>
+            <div className="environment-panel" aria-busy={isLoading}>
+              {isLoading ? (
+                <p className="environment-loading">
+                  Loading configuration...
+                </p>
+              ) : (
+                <>
+                  <div className="field-list">
+                    {pathFields.map((field) => (
+                      <FieldRow
+                        key={field.key}
+                        id={field.key}
+                        label={field.label}
+                        description={field.description}
+                        value={paths[field.key]}
+                        isValid={validation[field.key]}
+                        onChange={(event) =>
+                          updatePath(field.key, event.target.value)
+                        }
+                        onBlur={() => void handlePathBlur(field)}
+                        onBrowse={() => void browse(field)}
+                      />
+                    ))}
+                  </div>
+                  <ButtonRow
+                    feedback={
+                      <>
+                        {message && (
+                          <p className="form-message success">{message}</p>
+                        )}
+                        {error && (
+                          <p className="form-message error">{error}</p>
+                        )}
+                      </>
+                    }
+                  >
+                    <button
+                      className="primary-button"
+                      type="button"
+                      disabled={isSaving}
+                      onClick={() => void save()}
+                    >
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                  </ButtonRow>
+                </>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeOverlay === 'saves' && (
+        <div
+          className="overlay-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setActiveOverlay(null)
+            }
+          }}
+        >
+          <section
+            className="overlay-dialog overlay-dialog-wide"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Saves"
+          >
+            <button
+              className="overlay-close overlay-close-floating"
+              type="button"
+              aria-label="Close saves"
+              onClick={() => setActiveOverlay(null)}
+            >
+              Close
+            </button>
+            <SavesPage />
+          </section>
+        </div>
       )}
     </PageLayout>
   )

@@ -13,8 +13,7 @@ interface NavigationItem {
 }
 
 const navigationItems: readonly NavigationItem[] = [
-  { id: 'environment', label: 'Environment', marker: 'EN' },
-  { id: 'saves', label: 'Saves', marker: 'SV' },
+  { id: 'home', label: 'Home', marker: 'HM' },
   { id: 'skulls-eyes', label: 'Items', marker: 'IT' },
   { id: 'sets', label: 'Sets', marker: 'ST' },
   { id: 'monsters', label: 'Monsters', marker: 'MO', isLocked: true },

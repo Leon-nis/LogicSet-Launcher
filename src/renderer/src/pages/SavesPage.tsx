@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type {
-  SaveFile,
-  SaveFileKind,
-  TrashListResult,
-  TrashedSaveItem
-} from '../../../shared/types'
+import type { SaveFile, SaveFileKind } from '../../../shared/types'
 import { PageLayout } from '../components/PageLayout'
 
 const kindLabels: Readonly<Record<SaveFileKind, string>> = {
@@ -15,12 +10,8 @@ const kindLabels: Readonly<Record<SaveFileKind, string>> = {
 
 export const SavesPage = (): React.JSX.Element => {
   const supportsTrashApi =
-    typeof window.logicSet.saves.listTrash === 'function' &&
-    typeof window.logicSet.saves.moveToTrash === 'function' &&
-    typeof window.logicSet.saves.restore === 'function'
+    typeof window.logicSet.saves.moveToTrash === 'function'
   const [saves, setSaves] = useState<readonly SaveFile[]>([])
-  const [trashItems, setTrashItems] =
-    useState<readonly TrashedSaveItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isOpeningFolder, setIsOpeningFolder] = useState(false)
   const [activeActionId, setActiveActionId] = useState<string | null>(null)
@@ -34,30 +25,12 @@ export const SavesPage = (): React.JSX.Element => {
     setError(null)
 
     try {
-      const [savesResult, trashResult] = await Promise.all([
-        window.logicSet.saves.list(),
-        supportsTrashApi
-          ? window.logicSet.saves.listTrash()
-          : Promise.resolve<TrashListResult>({
-              success: true,
-              items: []
-            })
-      ])
+      const savesResult = await window.logicSet.saves.list()
       setSaves(savesResult.saves)
-      setTrashItems(trashResult.items)
       setIsFolderAvailable(savesResult.success)
 
-      const errors = [
-        savesResult.success
-          ? null
-          : (savesResult.message ?? 'Could not load save files.'),
-        trashResult.success
-          ? null
-          : (trashResult.message ?? 'Could not load Launcher Trash.')
-      ].filter((value): value is string => value !== null)
-
-      if (errors.length > 0) {
-        setError(errors.join(' '))
+      if (!savesResult.success) {
+        setError(savesResult.message ?? 'Could not load save files.')
       } else if (!supportsTrashApi) {
         setMessage(
           'Restart the launcher to enable Launcher Trash actions.'
@@ -65,7 +38,6 @@ export const SavesPage = (): React.JSX.Element => {
       }
     } catch (loadError: unknown) {
       setSaves([])
-      setTrashItems([])
       setIsFolderAvailable(false)
       setError(
         `Could not load save files. ${
@@ -133,36 +105,7 @@ export const SavesPage = (): React.JSX.Element => {
       await refresh()
       setMessage(result.message)
     } catch (actionError: unknown) {
-      setError(formatActionError('Could not move the file to trash.', actionError))
-    } finally {
-      setActiveActionId(null)
-    }
-  }
-
-  const restore = async (item: TrashedSaveItem): Promise<void> => {
-    if (!supportsTrashApi) {
-      setError('Restart the launcher to enable Launcher Trash actions.')
-      return
-    }
-
-    setActiveActionId(item.trashId)
-    setMessage(null)
-    setError(null)
-
-    try {
-      const result = await window.logicSet.saves.restore({
-        trashId: item.trashId
-      })
-
-      if (!result.success) {
-        setError(result.message)
-        return
-      }
-
-      await refresh()
-      setMessage(result.message)
-    } catch (actionError: unknown) {
-      setError(formatActionError('Could not restore the file.', actionError))
+      setError(formatActionError('Could not delete the file.', actionError))
     } finally {
       setActiveActionId(null)
     }
@@ -214,8 +157,8 @@ export const SavesPage = (): React.JSX.Element => {
           </div>
         ) : saves.length === 0 && !error ? (
           <div className="saves-empty-state">
-            <strong>No files found</strong>
-            <p>The configured saves folder is valid but currently empty.</p>
+            <strong>No saves found</strong>
+            <p>No characters or shared stash were found in this folder.</p>
           </div>
         ) : saves.length > 0 ? (
           <div className="saves-table-wrapper">
@@ -223,7 +166,7 @@ export const SavesPage = (): React.JSX.Element => {
               <thead>
                 <tr>
                   <th scope="col">Type</th>
-                  <th scope="col">File name</th>
+                  <th scope="col">Name</th>
                   <th scope="col">Size</th>
                   <th scope="col">Last modified</th>
                   <th scope="col">Action</th>
@@ -239,10 +182,10 @@ export const SavesPage = (): React.JSX.Element => {
                     </td>
                     <td
                       className="save-file-name"
-                      data-label="File name"
+                      data-label="Name"
                       title={save.fullPath}
                     >
-                      {save.fileName}
+                      {getSaveName(save)}
                     </td>
                     <td data-label="Size">{formatBytes(save.sizeBytes)}</td>
                     <td data-label="Last modified">
@@ -260,8 +203,8 @@ export const SavesPage = (): React.JSX.Element => {
                           onClick={() => void moveToTrash(save)}
                         >
                           {activeActionId === save.fullPath
-                            ? 'Moving...'
-                            : 'Move to Trash'}
+                            ? 'Deleting...'
+                            : 'Delete'}
                         </button>
                       ) : (
                         <span className="action-unavailable">Not available</span>
@@ -275,89 +218,26 @@ export const SavesPage = (): React.JSX.Element => {
         ) : (
           <div className="saves-empty-state error">
             <strong>Saves unavailable</strong>
-            <p>Check the configured saves/modsave path in Environment.</p>
-          </div>
-        )}
-      </section>
-
-      <section className="saves-panel trash-panel">
-        <div className="saves-toolbar">
-          <div className="saves-toolbar-copy">
-            <span className="eyebrow">Recoverable</span>
-            <h2>Launcher Trash</h2>
-            <p>
-              Files remain here until restored. Permanent deletion is not
-              available.
-            </p>
-          </div>
-          <span className="trash-count">
-            {trashItems.length} {trashItems.length === 1 ? 'item' : 'items'}
-          </span>
-        </div>
-
-        {isLoading ? (
-          <div className="saves-empty-state">
-            <strong>Loading Launcher Trash...</strong>
-          </div>
-        ) : trashItems.length === 0 ? (
-          <div className="saves-empty-state">
-            <strong>Launcher Trash is empty</strong>
-            <p>Character and shared stash files moved here will appear here.</p>
-          </div>
-        ) : (
-          <div className="saves-table-wrapper">
-            <table className="saves-table trash-table">
-              <thead>
-                <tr>
-                  <th scope="col">Type</th>
-                  <th scope="col">File name</th>
-                  <th scope="col">Size</th>
-                  <th scope="col">Trashed</th>
-                  <th scope="col">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trashItems.map((item) => (
-                  <tr key={item.trashId}>
-                    <td data-label="Type">
-                      <span className="save-kind" data-kind={item.kind}>
-                        {kindLabels[item.kind]}
-                      </span>
-                    </td>
-                    <td
-                      className="save-file-name"
-                      data-label="File name"
-                      title={item.originalPath}
-                    >
-                      {item.fileName}
-                    </td>
-                    <td data-label="Size">{formatBytes(item.sizeBytes)}</td>
-                    <td data-label="Trashed">
-                      {formatDate(item.trashedAt)}
-                    </td>
-                    <td data-label="Action">
-                      <button
-                        className="secondary-button compact-button"
-                        type="button"
-                        disabled={
-                          !supportsTrashApi || activeActionId !== null
-                        }
-                        onClick={() => void restore(item)}
-                      >
-                        {activeActionId === item.trashId
-                          ? 'Restoring...'
-                          : 'Restore'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <p>Check the configured saves/modsave path in Paths.</p>
           </div>
         )}
       </section>
     </PageLayout>
   )
+}
+
+const getSaveName = (save: SaveFile): string => {
+  if (save.kind === 'shared_stash') {
+    return 'Baú'
+  }
+
+  const extensionIndex = save.fileName.lastIndexOf('.')
+  const fileNameWithoutExtension =
+    extensionIndex > 0
+      ? save.fileName.slice(0, extensionIndex)
+      : save.fileName
+
+  return fileNameWithoutExtension.split('_', 1)[0] ?? fileNameWithoutExtension
 }
 
 const formatBytes = (sizeBytes: number): string => {
