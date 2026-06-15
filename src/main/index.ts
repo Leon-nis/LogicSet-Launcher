@@ -3,8 +3,6 @@ import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
 import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
 import type {
-  AnalyticsEventName,
-  AnalyticsEventProperties,
   GamePaths,
   LocalSettings,
   PathDialogKind,
@@ -59,8 +57,7 @@ const ipcChannels = {
   checkModUpdate: 'mod-update:check',
   installModUpdate: 'mod-update:install',
   getAnalyticsSettings: 'analytics:get-settings',
-  setAnalyticsEnabled: 'analytics:set-enabled',
-  trackAnalyticsEvent: 'analytics:track-event'
+  setAnalyticsEnabled: 'analytics:set-enabled'
 } as const
 
 let isDevMode = false
@@ -142,7 +139,8 @@ const createDefaultSettings = (): LocalSettings => {
     },
     analytics: {
       enabled: false,
-      anonymousId: randomUUID()
+      anonymousId: randomUUID(),
+      userActivated: false
     }
   }
 }
@@ -233,9 +231,6 @@ const isSaveManifestUrlRequest = (
   value !== null &&
   typeof (value as Record<string, unknown>).manifestUrl === 'string'
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null
-
 const showPathDialog = async (
   kind: PathDialogKind,
   parentWindow: BrowserWindow | null
@@ -317,25 +312,19 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
       return analyticsService.setEnabled(enabled)
     }
   )
-  ipcMain.handle(
-    ipcChannels.trackAnalyticsEvent,
-    (_event, event: unknown, properties: unknown) => {
-      if (typeof event !== 'string') {
-        return
-      }
-
-      return analyticsService.trackEvent(
-        event as AnalyticsEventName,
-        isRecord(properties)
-          ? (properties as AnalyticsEventProperties)
-          : undefined
-      )
-    }
-  )
   ipcMain.handle(ipcChannels.loadConfig, () => settingsService.load())
   ipcMain.handle(
     ipcChannels.saveConfig,
-    (_event, settings: LocalSettings) => settingsService.save(settings)
+    async (_event, settings: LocalSettings) => {
+      const currentSettings = await settingsService.load()
+      return settingsService.save({
+        ...settings,
+        analytics: {
+          ...settings.analytics,
+          userActivated: currentSettings.analytics.userActivated
+        }
+      })
+    }
   )
   ipcMain.handle(
     ipcChannels.validatePaths,
@@ -383,7 +372,13 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
       )
     }
   )
-  ipcMain.handle(ipcChannels.launchGame, () => gameLaunchService.launch())
+  ipcMain.handle(ipcChannels.launchGame, async () => {
+    const result = await gameLaunchService.launch()
+    if (result.success) {
+      void analyticsService.trackGameLaunched()
+    }
+    return result
+  })
   ipcMain.handle(ipcChannels.listSaves, () => saveManagerService.listSaves())
   ipcMain.handle(ipcChannels.openSavesFolder, () =>
     saveManagerService.openSavesFolder()
@@ -447,24 +442,10 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
     }
   )
   ipcMain.handle(ipcChannels.checkModUpdate, async () => {
-    const result = await modUpdateService.checkForUpdate()
-    void analyticsService.trackEvent('mod_update_checked', {
-      success: result.success,
-      error_code: result.errorCode,
-      installed_version: result.info.installedVersion ?? undefined,
-      remote_version: result.info.manifest?.version
-    })
-    return result
+    return modUpdateService.checkForUpdate()
   })
   ipcMain.handle(ipcChannels.installModUpdate, async () => {
-    const result = await modUpdateService.installUpdate()
-    void analyticsService.trackEvent('mod_update_installed', {
-      success: result.success,
-      error_code: result.errorCode,
-      installed_version: result.info.installedVersion ?? undefined,
-      modpack_version: result.info.manifest?.version
-    })
-    return result
+    return modUpdateService.installUpdate()
   })
 }
 
@@ -500,6 +481,7 @@ const createMainWindow = (): BrowserWindow => {
 
 app.whenReady().then(async () => {
   await registerEnvironmentHandlers()
+  await analyticsServiceForShutdown?.startSession()
   createApplicationMenu()
   createMainWindow()
 

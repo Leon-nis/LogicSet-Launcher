@@ -81,7 +81,8 @@ const isLocalSettings = (value: unknown): value is LocalSettings => {
     isRecord(analytics) &&
     typeof analytics.enabled === 'boolean' &&
     typeof analytics.anonymousId === 'string' &&
-    analytics.anonymousId.trim() !== ''
+    analytics.anonymousId.trim() !== '' &&
+    typeof analytics.userActivated === 'boolean'
   )
 }
 
@@ -149,7 +150,11 @@ const normalizeLocalSettings = (
         typeof analytics.anonymousId === 'string' &&
         analytics.anonymousId.trim() !== ''
           ? analytics.anonymousId
-          : defaultSettings.analytics.anonymousId
+          : defaultSettings.analytics.anonymousId,
+      userActivated:
+        typeof analytics.userActivated === 'boolean'
+          ? analytics.userActivated
+          : defaultSettings.analytics.userActivated
     }
   }
 }

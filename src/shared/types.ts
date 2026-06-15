@@ -103,22 +103,21 @@ export interface ModUpdateSettings {
 export interface AnalyticsSettings {
   readonly enabled: boolean
   readonly anonymousId: string
+  readonly userActivated: boolean
 }
 
 export type AnalyticsEventName =
-  | 'analytics_enabled'
-  | 'mod_update_tab_opened'
-  | 'mod_update_checked'
-  | 'mod_update_installed'
+  | 'game_launched'
+  | 'launcher_opened'
+  | 'launcher_session_ended'
+  | 'launcher_session_started'
+  | 'user_activated'
 
 export interface AnalyticsEventProperties {
   readonly app_version?: string
   readonly os?: string
-  readonly success?: boolean
-  readonly error_code?: string
-  readonly installed_version?: string
-  readonly remote_version?: string
-  readonly modpack_version?: string
+  readonly session_id?: string
+  readonly session_duration_seconds?: number
 }
 
 export type UdpPortReadResult =
@@ -261,10 +260,6 @@ export interface LogicSetApi {
   readonly analytics: {
     readonly getSettings: () => Promise<AnalyticsSettings>
     readonly setEnabled: (enabled: boolean) => Promise<AnalyticsSettings>
-    readonly trackEvent: (
-      event: AnalyticsEventName,
-      properties?: AnalyticsEventProperties
-    ) => Promise<void>
   }
   readonly environment: {
     readonly loadConfig: () => Promise<LocalSettings>

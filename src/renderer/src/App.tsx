@@ -29,10 +29,6 @@ export const App = (): React.JSX.Element => {
     useState<NavigationPage>('home')
   const ActivePage = pages[activePage]
   const navigate = (page: NavigationPage): void => {
-    if (page === 'mod-update' && activePage !== page) {
-      void window.logicSet.analytics.trackEvent('mod_update_tab_opened')
-    }
-
     setActivePage(page)
   }
 

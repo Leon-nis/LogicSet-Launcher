@@ -64,7 +64,8 @@ const emptyValidation: PathValidation = {
 
 const emptyAnalyticsSettings: AnalyticsSettings = {
   enabled: false,
-  anonymousId: ''
+  anonymousId: '',
+  userActivated: false
 }
 
 type HomeOverlay = 'paths' | 'saves' | null

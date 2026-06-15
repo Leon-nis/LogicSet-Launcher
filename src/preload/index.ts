@@ -18,9 +18,7 @@ const logicSetApi: LogicSetApi = {
   analytics: {
     getSettings: () => ipcRenderer.invoke('analytics:get-settings'),
     setEnabled: (enabled) =>
-      ipcRenderer.invoke('analytics:set-enabled', enabled),
-    trackEvent: (event, properties) =>
-      ipcRenderer.invoke('analytics:track-event', event, properties)
+      ipcRenderer.invoke('analytics:set-enabled', enabled)
   },
   environment: {
     loadConfig: () => ipcRenderer.invoke('environment:load-config'),
