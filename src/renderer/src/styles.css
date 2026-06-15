@@ -1062,6 +1062,91 @@ button:focus-visible {
   box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
 }
 
+.mod-update-toolbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #202b36;
+}
+
+.mod-update-toolbar h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.mod-update-toolbar p {
+  margin: 0;
+  color: #8f9baa;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.mod-player-compact {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 18px;
+}
+
+.mod-status-indicator {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  border-radius: 50%;
+  background: #778390;
+  box-shadow: 0 0 0 5px rgb(119 131 144 / 12%);
+}
+
+.mod-player-compact[data-status="up-to-date"] .mod-status-indicator {
+  background: #65d2b3;
+  box-shadow: 0 0 0 5px rgb(101 210 179 / 12%);
+}
+
+.mod-player-compact[data-status="outdated"] .mod-status-indicator,
+.mod-player-compact[data-status="not-installed"] .mod-status-indicator {
+  background: #d6ad58;
+  box-shadow: 0 0 0 5px rgb(214 173 88 / 12%);
+}
+
+.mod-player-compact[data-status="invalid"] .mod-status-indicator {
+  background: #df6971;
+  box-shadow: 0 0 0 5px rgb(223 105 113 / 12%);
+}
+
+.mod-player-compact-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.mod-player-compact-copy h2 {
+  margin: 4px 0 3px;
+  font-size: 16px;
+}
+
+.mod-player-compact-copy p {
+  margin: 0;
+  color: #8f9baa;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.mod-player-compact-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.mod-update-dev-toggle {
+  margin-left: 4px;
+  font-size: 11px;
+}
+
 .manifest-settings {
   display: grid;
   min-width: 0;
@@ -2063,6 +2148,25 @@ button:focus-visible {
   .mod-update-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .mod-update-toolbar,
+  .mod-player-compact {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mod-player-compact-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .mod-player-compact-actions button {
+    width: 100%;
+  }
+
+  .mod-update-dev-toggle {
+    margin: 4px 0 0;
   }
 
   .install-update-button {

@@ -51,7 +51,8 @@ export class DefaultModUpdateService implements ModUpdateService {
     return {
       manifestUrl: settings.modUpdate.manifestUrl,
       installedVersion: settings.modUpdate.installedVersion,
-      manifest: this.checkedManifest
+      manifest: this.checkedManifest,
+      installationStatus: 'unknown'
     }
   }
 
@@ -81,7 +82,8 @@ export class DefaultModUpdateService implements ModUpdateService {
       info: {
         manifestUrl: savedSettings.modUpdate.manifestUrl,
         installedVersion: savedSettings.modUpdate.installedVersion,
-        manifest: null
+        manifest: null,
+        installationStatus: 'unknown'
       }
     }
   }
@@ -146,19 +148,29 @@ export class DefaultModUpdateService implements ModUpdateService {
       }
 
       this.checkedManifest = manifest
+      const installationStatus = await getInstallationStatus(
+        manifest,
+        settings.modUpdate.installedVersion,
+        settings.gamePaths.modsDirectoryPath
+      )
       await this.logSafely('mod_update_check_succeeded', {
         manifestUrl,
         version: manifest.version,
-        channel: manifest.channel
+        channel: manifest.channel,
+        installationStatus
       })
 
       return {
         success: true,
-        message: `Remote modpack ${manifest.version} is available.`,
+        message: getInstallationStatusMessage(
+          installationStatus,
+          manifest.version
+        ),
         info: {
           manifestUrl,
           installedVersion: settings.modUpdate.installedVersion,
-          manifest
+          manifest,
+          installationStatus
         }
       }
     } catch (error: unknown) {
@@ -296,7 +308,8 @@ export class DefaultModUpdateService implements ModUpdateService {
         info: {
           manifestUrl: savedSettings.modUpdate.manifestUrl,
           installedVersion: savedSettings.modUpdate.installedVersion,
-          manifest
+          manifest,
+          installationStatus: 'up-to-date'
         }
       }
     } catch (error: unknown) {
@@ -584,6 +597,65 @@ const validateModsDirectory = async (
       message: 'The configured mods folder does not exist.',
       errorCode: 'mods-folder-not-found'
     }
+  }
+}
+
+const getInstallationStatus = async (
+  manifest: ModpackManifest,
+  installedVersion: string | null,
+  modsDirectory: string
+): Promise<ModUpdateInfo['installationStatus']> => {
+  if (installedVersion === null) {
+    return 'not-installed'
+  }
+
+  if (installedVersion !== manifest.version) {
+    return 'outdated'
+  }
+
+  for (const manifestFile of manifest.files) {
+    const relativePath = stripModsPrefix(manifestFile.relativePath)
+    const installedPath = resolve(
+      modsDirectory,
+      ...relativePath.split('/')
+    )
+
+    if (!isInsideDirectory(modsDirectory, installedPath)) {
+      return 'invalid'
+    }
+
+    try {
+      const installedStats = await stat(installedPath)
+      if (
+        !installedStats.isFile() ||
+        installedStats.size !== manifestFile.sizeBytes ||
+        (await calculateSha256(installedPath)) !== manifestFile.sha256
+      ) {
+        return 'invalid'
+      }
+    } catch {
+      return 'invalid'
+    }
+  }
+
+  return 'up-to-date'
+}
+
+const getInstallationStatusMessage = (
+  status: ModUpdateInfo['installationStatus'],
+  version: string
+): string => {
+  switch (status) {
+    case 'up-to-date':
+      return `LogicSet ${version} is up to date and all installed files are valid.`
+    case 'outdated':
+      return `LogicSet ${version} is available. Update the installed modpack.`
+    case 'invalid':
+      return `LogicSet ${version} is selected, but installed files are missing or modified.`
+    case 'not-installed':
+      return `LogicSet ${version} is available and is not installed yet.`
+    default:
+      return `LogicSet ${version} status is unknown.`
   }
 }
 

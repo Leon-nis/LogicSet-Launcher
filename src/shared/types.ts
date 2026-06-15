@@ -231,6 +231,12 @@ export interface ModUpdateInfo {
   readonly manifestUrl: string
   readonly installedVersion: string | null
   readonly manifest: ModpackManifest | null
+  readonly installationStatus:
+    | 'unknown'
+    | 'not-installed'
+    | 'outdated'
+    | 'invalid'
+    | 'up-to-date'
 }
 
 export interface ModUpdateResult {
