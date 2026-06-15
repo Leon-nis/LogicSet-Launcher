@@ -11,6 +11,7 @@ import {
   SkillsPage
 } from './pages/WipPage'
 import type { NavigationPage } from '../../shared/types'
+import { DevModeProvider } from './contexts/DevModeContext'
 
 const pages: Record<NavigationPage, React.ComponentType> = {
   home: HomePage,
@@ -36,11 +37,13 @@ export const App = (): React.JSX.Element => {
   }
 
   return (
-    <div className="app-shell">
-      <Sidebar activePage={activePage} onNavigate={navigate} />
-      <main className="main-content">
-        <ActivePage />
-      </main>
-    </div>
+    <DevModeProvider>
+      <div className="app-shell">
+        <Sidebar activePage={activePage} onNavigate={navigate} />
+        <main className="main-content">
+          <ActivePage />
+        </main>
+      </div>
+    </DevModeProvider>
   )
 }

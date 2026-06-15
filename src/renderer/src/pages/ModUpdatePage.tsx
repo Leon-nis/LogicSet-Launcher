@@ -5,6 +5,7 @@ import type {
 } from '../../../shared/types'
 import { DEFAULT_LOGICSET_MANIFEST_URL } from '../../../shared/types'
 import { PageLayout } from '../components/PageLayout'
+import { useDevMode } from '../contexts/DevModeContext'
 
 const emptyInfo: ModUpdateInfo = {
   manifestUrl: DEFAULT_LOGICSET_MANIFEST_URL,
@@ -26,7 +27,7 @@ export const ModUpdatePage = (): React.JSX.Element => {
   )
   const [info, setInfo] = useState<ModUpdateInfo>(emptyInfo)
   const [operation, setOperation] = useState<UpdateOperation>(null)
-  const [isDevMode, setIsDevMode] = useState(false)
+  const isDevMode = useDevMode()
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -181,19 +182,6 @@ export const ModUpdatePage = (): React.JSX.Element => {
                   {operation === 'installing' ? 'Updating...' : 'Update'}
                 </button>
               )}
-              <label className="dev-mode-toggle mod-update-dev-toggle">
-                <input
-                  type="checkbox"
-                  checked={isDevMode}
-                  disabled={isLoading || isBusy}
-                  onChange={(event) => {
-                    setIsDevMode(event.target.checked)
-                    setMessage(null)
-                    setError(null)
-                  }}
-                />
-                <span>Dev Mode</span>
-              </label>
             </div>
           </div>
         )}
@@ -205,19 +193,6 @@ export const ModUpdatePage = (): React.JSX.Element => {
                 <h2>LogicSet status</h2>
                 <p>Advanced updater and manifest settings.</p>
               </div>
-              <label className="dev-mode-toggle">
-                <input
-                  type="checkbox"
-                  checked={isDevMode}
-                  disabled={isLoading || isBusy}
-                  onChange={(event) => {
-                    setIsDevMode(event.target.checked)
-                    setMessage(null)
-                    setError(null)
-                  }}
-                />
-                <span>Dev Mode</span>
-              </label>
             </div>
             <div className="manifest-settings">
               <div className="manifest-settings-copy">

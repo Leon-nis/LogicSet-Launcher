@@ -1142,11 +1142,6 @@ button:focus-visible {
   gap: 10px;
 }
 
-.mod-update-dev-toggle {
-  margin-left: 4px;
-  font-size: 11px;
-}
-
 .manifest-settings {
   display: grid;
   min-width: 0;
@@ -1301,23 +1296,6 @@ button:focus-visible {
   color: #8f9baa;
   font-size: 13px;
   line-height: 1.4;
-}
-
-.dev-mode-toggle {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 10px;
-  color: #dbe3eb;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.dev-mode-toggle input {
-  width: 18px;
-  height: 18px;
-  accent-color: #65d2b3;
 }
 
 .socketables-dev-actions {
@@ -2165,10 +2143,6 @@ button:focus-visible {
     width: 100%;
   }
 
-  .mod-update-dev-toggle {
-    margin: 4px 0 0;
-  }
-
   .install-update-button {
     width: 100%;
   }
@@ -2177,10 +2151,6 @@ button:focus-visible {
   .socketables-footer {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .dev-mode-toggle {
-    align-self: flex-start;
   }
 
   .socketables-dev-actions {

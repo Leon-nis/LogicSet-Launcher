@@ -8,12 +8,13 @@ import {
   type SocketableStat
 } from '../../../shared/types'
 import { PageLayout } from '../components/PageLayout'
+import { useDevMode } from '../contexts/DevModeContext'
 
 type Operation = 'saving' | 'resetting' | null
 
 export const SkullsEyesPage = (): React.JSX.Element => {
   const [socketables, setSocketables] = useState<SocketableEntry[]>([])
-  const [isDevMode, setIsDevMode] = useState(false)
+  const isDevMode = useDevMode()
   const [newKind, setNewKind] = useState<SocketableKind>('skull')
   const [isLoading, setIsLoading] = useState(true)
   const [operation, setOperation] = useState<Operation>(null)
@@ -131,18 +132,6 @@ export const SkullsEyesPage = (): React.JSX.Element => {
               read or changed.
             </p>
           </div>
-          <label className="dev-mode-toggle">
-            <input
-              type="checkbox"
-              checked={isDevMode}
-              disabled={isBusy}
-              onChange={(event) => {
-                setIsDevMode(event.target.checked)
-                clearFeedback()
-              }}
-            />
-            <span>Dev Mode</span>
-          </label>
         </div>
 
         {isDevMode && (

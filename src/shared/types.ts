@@ -252,6 +252,12 @@ export interface SaveManifestUrlRequest {
 
 export interface LogicSetApi {
   readonly getAppInfo: () => Promise<AppInfo>
+  readonly devMode: {
+    readonly get: () => Promise<boolean>
+    readonly onChanged: (
+      listener: (enabled: boolean) => void
+    ) => () => void
+  }
   readonly analytics: {
     readonly getSettings: () => Promise<AnalyticsSettings>
     readonly setEnabled: (enabled: boolean) => Promise<AnalyticsSettings>

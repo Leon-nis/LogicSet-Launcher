@@ -1,7 +1,7 @@
 import { access } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
-import { app, BrowserWindow, dialog, ipcMain } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
 import type {
   AnalyticsEventName,
   AnalyticsEventProperties,
@@ -33,6 +33,8 @@ import {
 import { FileTorchlightSettingsService } from './services/torchlight-settings.service'
 
 const ipcChannels = {
+  getDevMode: 'dev-mode:get',
+  devModeChanged: 'dev-mode:changed',
   loadConfig: 'environment:load-config',
   saveConfig: 'environment:save-config',
   validatePaths: 'environment:validate-paths',
@@ -59,6 +61,61 @@ const ipcChannels = {
   setAnalyticsEnabled: 'analytics:set-enabled',
   trackAnalyticsEvent: 'analytics:track-event'
 } as const
+
+let isDevMode = false
+
+const setDevMode = (enabled: boolean): void => {
+  isDevMode = enabled
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send(ipcChannels.devModeChanged, enabled)
+  }
+}
+
+const createApplicationMenu = (): void => {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: 'File',
+      submenu: [{ role: 'quit' }]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+        { type: 'separator' },
+        {
+          label: 'Dev Mode',
+          type: 'checkbox',
+          checked: isDevMode,
+          click: (menuItem) => setDevMode(menuItem.checked)
+        }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [{ role: 'minimize' }, { role: 'close' }]
+    }
+  ])
+  Menu.setApplicationMenu(menu)
+}
 
 const createDefaultSettings = (): LocalSettings => {
   const torchlightDocumentsPath = join(
@@ -242,6 +299,7 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
     join(app.getPath('userData'), 'sets.json')
   )
 
+  ipcMain.handle(ipcChannels.getDevMode, () => isDevMode)
   ipcMain.handle(ipcChannels.getAnalyticsSettings, () =>
     analyticsService.getSettings()
   )
@@ -438,6 +496,7 @@ const createMainWindow = (): BrowserWindow => {
 
 app.whenReady().then(async () => {
   await registerEnvironmentHandlers()
+  createApplicationMenu()
   createMainWindow()
 
   app.on('activate', () => {

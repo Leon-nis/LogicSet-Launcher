@@ -6,6 +6,15 @@ const logicSetApi: LogicSetApi = {
     name: 'LogicSet Launcher',
     version: '0.1.0'
   }),
+  devMode: {
+    get: () => ipcRenderer.invoke('dev-mode:get'),
+    onChanged: (listener) => {
+      const handler = (_event: Electron.IpcRendererEvent, enabled: boolean) =>
+        listener(enabled)
+      ipcRenderer.on('dev-mode:changed', handler)
+      return () => ipcRenderer.removeListener('dev-mode:changed', handler)
+    }
+  },
   analytics: {
     getSettings: () => ipcRenderer.invoke('analytics:get-settings'),
     setEnabled: (enabled) =>

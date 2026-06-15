@@ -10,6 +10,7 @@ import {
   type SocketableStat
 } from '../../../shared/types'
 import { PageLayout } from '../components/PageLayout'
+import { useDevMode } from '../contexts/DevModeContext'
 
 type Operation = 'saving' | 'resetting' | null
 
@@ -18,7 +19,7 @@ export const SetsPage = (): React.JSX.Element => {
   const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(
     new Set()
   )
-  const [isDevMode, setIsDevMode] = useState(false)
+  const isDevMode = useDevMode()
   const [isLoading, setIsLoading] = useState(true)
   const [operation, setOperation] = useState<Operation>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -149,18 +150,6 @@ export const SetsPage = (): React.JSX.Element => {
             <h2>Set registry</h2>
             <p>Local reference only. No mod or game files are changed.</p>
           </div>
-          <label className="dev-mode-toggle">
-            <input
-              type="checkbox"
-              checked={isDevMode}
-              disabled={isBusy}
-              onChange={(event) => {
-                setIsDevMode(event.target.checked)
-                clearFeedback()
-              }}
-            />
-            <span>Dev Mode</span>
-          </label>
         </div>
 
         {isDevMode && (
