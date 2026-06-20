@@ -60,6 +60,11 @@ const logicSetApi: LogicSetApi = {
       ipcRenderer.invoke('mod-update:save-manifest-url', request),
     check: () => ipcRenderer.invoke('mod-update:check'),
     install: () => ipcRenderer.invoke('mod-update:install')
+  },
+  patchNotes: {
+    get: () => ipcRenderer.invoke('patch-notes:get'),
+    browseImage: () => ipcRenderer.invoke('patch-notes:browse-image'),
+    save: (entries) => ipcRenderer.invoke('patch-notes:save', entries)
   }
 }
 

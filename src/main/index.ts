@@ -19,6 +19,10 @@ import { TorchlightGameLaunchService } from './services/game-launch.service'
 import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
 import { DefaultModUpdateService } from './services/mod-update.service'
+import {
+  isPatchNoteEntryInputs,
+  JsonPatchNotesService
+} from './services/patch-notes.service'
 import { SystemProcessService } from './services/process.service'
 import { DefaultSaveManagerService } from './services/save-manager.service'
 import {
@@ -57,7 +61,10 @@ const ipcChannels = {
   checkModUpdate: 'mod-update:check',
   installModUpdate: 'mod-update:install',
   getAnalyticsSettings: 'analytics:get-settings',
-  setAnalyticsEnabled: 'analytics:set-enabled'
+  setAnalyticsEnabled: 'analytics:set-enabled',
+  getPatchNotes: 'patch-notes:get',
+  browsePatchNoteImage: 'patch-notes:browse-image',
+  savePatchNotes: 'patch-notes:save'
 } as const
 
 let isDevMode = false
@@ -327,6 +334,9 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
   const setsService = new JsonSetsService(
     join(app.getPath('userData'), 'sets.json')
   )
+  const patchNotesService = new JsonPatchNotesService(
+    join(app.getPath('userData'), 'patch-notes.json')
+  )
 
   ipcMain.handle(ipcChannels.getDevMode, () => isDevMode)
   ipcMain.handle(ipcChannels.getAnalyticsSettings, () =>
@@ -476,6 +486,46 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
   ipcMain.handle(ipcChannels.installModUpdate, async () => {
     return modUpdateService.installUpdate()
   })
+  ipcMain.handle(ipcChannels.getPatchNotes, () =>
+    patchNotesService.load()
+  )
+  ipcMain.handle(
+    ipcChannels.browsePatchNoteImage,
+    async (event) => {
+      if (!isDevMode) {
+        throw new Error('Dev Mode is required to select patch note images.')
+      }
+
+      const parentWindow = BrowserWindow.fromWebContents(event.sender)
+      const options: Electron.OpenDialogOptions = {
+        properties: ['openFile'],
+        filters: [
+          {
+            name: 'Patch note images',
+            extensions: ['jpg', 'jpeg', 'png', 'webp']
+          }
+        ]
+      }
+      const result = parentWindow
+        ? await dialog.showOpenDialog(parentWindow, options)
+        : await dialog.showOpenDialog(options)
+      return result.canceled ? null : (result.filePaths[0] ?? null)
+    }
+  )
+  ipcMain.handle(
+    ipcChannels.savePatchNotes,
+    (_event, entries: unknown) => {
+      if (!isDevMode) {
+        throw new Error('Dev Mode is required to edit patch notes.')
+      }
+
+      if (!isPatchNoteEntryInputs(entries)) {
+        throw new Error('Invalid patch notes data.')
+      }
+
+      return patchNotesService.save(entries)
+    }
+  )
 }
 
 const createMainWindow = (): BrowserWindow => {

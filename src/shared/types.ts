@@ -1,5 +1,9 @@
 export type NavigationPage =
   | 'home'
+  | 'wiki'
+  | 'patch-notes'
+
+export type WikiPage =
   | 'skulls-eyes'
   | 'sets'
   | 'monsters'
@@ -248,6 +252,16 @@ export interface SaveManifestUrlRequest {
   readonly manifestUrl: string
 }
 
+export interface PatchNoteEntryInput {
+  readonly id: string
+  readonly version: string
+  readonly imagePath: string
+}
+
+export interface PatchNoteEntry extends PatchNoteEntryInput {
+  readonly imageDataUrl: string | null
+}
+
 export interface LogicSetApi {
   readonly getAppInfo: () => Promise<AppInfo>
   readonly devMode: {
@@ -309,5 +323,12 @@ export interface LogicSetApi {
     ) => Promise<ModUpdateResult>
     readonly check: () => Promise<ModUpdateResult>
     readonly install: () => Promise<ModUpdateResult>
+  }
+  readonly patchNotes: {
+    readonly get: () => Promise<readonly PatchNoteEntry[]>
+    readonly browseImage: () => Promise<string | null>
+    readonly save: (
+      entries: readonly PatchNoteEntryInput[]
+    ) => Promise<readonly PatchNoteEntry[]>
   }
 }

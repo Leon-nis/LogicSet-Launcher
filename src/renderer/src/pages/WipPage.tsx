@@ -6,7 +6,7 @@ const WipPage = ({ title }: WipPageProps): React.JSX.Element => (
   <div className="page wip-page">
     <div className="wip-message" role="status">
       <span>{title}</span>
-      <strong>WiP — Not available yet</strong>
+      <strong>WiP - Not available yet</strong>
     </div>
   </div>
 )

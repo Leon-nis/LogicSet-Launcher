@@ -1,25 +1,15 @@
 import { useState } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { HomePage } from './pages/HomePage'
-import { SetsPage } from './pages/SetsPage'
-import { SkullsEyesPage } from './pages/SkullsEyesPage'
-import {
-  BossesPage,
-  MonstersPage,
-  QuestsPage,
-  SkillsPage
-} from './pages/WipPage'
+import { PatchNotesPage } from './pages/PatchNotesPage'
+import { WikiPage } from './pages/WikiPage'
 import type { NavigationPage } from '../../shared/types'
 import { DevModeProvider } from './contexts/DevModeContext'
 
 const pages: Record<NavigationPage, React.ComponentType> = {
   home: HomePage,
-  'skulls-eyes': SkullsEyesPage,
-  sets: SetsPage,
-  monsters: MonstersPage,
-  bosses: BossesPage,
-  skills: SkillsPage,
-  quests: QuestsPage
+  wiki: WikiPage,
+  'patch-notes': PatchNotesPage
 }
 
 export const App = (): React.JSX.Element => {
