@@ -62,6 +62,7 @@ const ipcChannels = {
   resetSets: 'sets:reset',
   getBosses: 'bosses:get',
   saveBosses: 'bosses:save',
+  exportBossesToProject: 'bosses:export-project',
   resetBosses: 'bosses:reset',
   getModUpdateInfo: 'mod-update:get-info',
   saveManifestUrl: 'mod-update:save-manifest-url',
@@ -342,7 +343,8 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
     join(app.getPath('userData'), 'sets.json')
   )
   const bossesService = new JsonBossesService(
-    join(app.getPath('userData'), 'bosses.json')
+    join(app.getPath('userData'), 'bosses.json'),
+    join(process.cwd(), 'data', 'bosses.json')
   )
   const patchNotesService = new JsonPatchNotesService(
     join(app.getPath('userData'), 'patch-notes.json')
@@ -489,6 +491,24 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
 
     return bossesService.save(bosses)
   })
+  ipcMain.handle(
+    ipcChannels.exportBossesToProject,
+    (_event, bosses: unknown) => {
+      if (!isDevMode) {
+        throw new Error('Dev Mode is required to edit bosses.')
+      }
+
+      if (app.isPackaged) {
+        throw new Error('Project export is only available in development.')
+      }
+
+      if (!isLogicSetBossEntries(bosses)) {
+        throw new Error('Invalid bosses data.')
+      }
+
+      return bossesService.exportToProject(bosses)
+    }
+  )
   ipcMain.handle(ipcChannels.resetBosses, () => {
     if (!isDevMode) {
       throw new Error('Dev Mode is required to edit bosses.')

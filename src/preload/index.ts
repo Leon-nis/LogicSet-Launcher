@@ -57,6 +57,8 @@ const logicSetApi: LogicSetApi = {
   bosses: {
     getBosses: () => ipcRenderer.invoke('bosses:get'),
     saveBosses: (bosses) => ipcRenderer.invoke('bosses:save', bosses),
+    exportBossesToProject: (bosses) =>
+      ipcRenderer.invoke('bosses:export-project', bosses),
     resetBossesToDefaults: () => ipcRenderer.invoke('bosses:reset')
   },
   modUpdate: {

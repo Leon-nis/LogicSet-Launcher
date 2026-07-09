@@ -345,6 +345,9 @@ export interface LogicSetApi {
     readonly saveBosses: (
       bosses: readonly LogicSetBossEntry[]
     ) => Promise<readonly LogicSetBossEntry[]>
+    readonly exportBossesToProject: (
+      bosses: readonly LogicSetBossEntry[]
+    ) => Promise<readonly LogicSetBossEntry[]>
     readonly resetBossesToDefaults: () => Promise<
       readonly LogicSetBossEntry[]
     >

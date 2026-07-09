@@ -19,7 +19,7 @@ import widowIcon from '../assets/generated/icon_widow.webp'
 import willyIcon from '../assets/generated/icon_willy.webp'
 import { useDevMode } from '../contexts/DevModeContext'
 
-type Operation = 'saving' | 'resetting' | null
+type Operation = 'saving' | 'exporting' | 'resetting' | null
 
 const armorKinds: readonly LogicSetBossArmorKind[] = [
   'Physical',
@@ -172,6 +172,22 @@ export const BossesSection = (): React.JSX.Element => {
       setMessage('Bosses saved locally.')
     } catch (saveError: unknown) {
       setError(formatError('Could not save bosses.', saveError))
+    } finally {
+      setOperation(null)
+    }
+  }
+
+  const exportBossesToProject = async (): Promise<void> => {
+    setOperation('exporting')
+    clearFeedback()
+
+    try {
+      const exported =
+        await window.logicSet.bosses.exportBossesToProject(bosses)
+      setBosses([...exported])
+      setMessage('Bosses exported to data/bosses.json.')
+    } catch (exportError: unknown) {
+      setError(formatError('Could not export bosses.', exportError))
     } finally {
       setOperation(null)
     }
@@ -403,6 +419,14 @@ export const BossesSection = (): React.JSX.Element => {
               onClick={() => void resetBosses()}
             >
               {operation === 'resetting' ? 'Resetting...' : 'Reset defaults'}
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={isBusy}
+              onClick={() => void exportBossesToProject()}
+            >
+              {operation === 'exporting' ? 'Exporting...' : 'Export to project'}
             </button>
             <button
               className="primary-button"
