@@ -145,6 +145,23 @@ export const BossesSection = (): React.JSX.Element => {
     clearFeedback()
   }
 
+  const updateBossImageOffset = (
+    bossId: string,
+    imageOffsetX: number
+  ): void => {
+    setBosses((currentBosses) =>
+      currentBosses.map((boss) =>
+        boss.id === bossId
+          ? {
+              ...boss,
+              imageOffsetX
+            }
+          : boss
+      )
+    )
+    clearFeedback()
+  }
+
   const saveBosses = async (): Promise<void> => {
     setOperation('saving')
     clearFeedback()
@@ -208,7 +225,35 @@ export const BossesSection = (): React.JSX.Element => {
                   src={bossIcons[boss.id] ?? fallenIcon}
                   alt=""
                   aria-hidden="true"
+                  style={{
+                    objectPosition: `${boss.imageOffsetX ?? 50}% 50%`
+                  }}
                 />
+                {isDevMode && (
+                  <label className="boss-image-control">
+                    <span>Image X</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      aria-label={`${boss.name} image horizontal offset`}
+                      disabled={isBusy}
+                      value={boss.imageOffsetX ?? 50}
+                      onChange={(event) =>
+                        updateBossImageOffset(
+                          boss.id,
+                          readNumberInput(
+                            event.target.value,
+                            boss.imageOffsetX ?? 50,
+                            0,
+                            100
+                          )
+                        )
+                      }
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="boss-card-content">

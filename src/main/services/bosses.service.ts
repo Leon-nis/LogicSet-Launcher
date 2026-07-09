@@ -367,6 +367,14 @@ const isLogicSetBossEntry = (value: unknown): value is LogicSetBossEntry => {
     isFiniteNumber(value.criticalChance) &&
     value.criticalChance >= 0 &&
     value.criticalChance <= 100 &&
+    (
+      value.imageOffsetX === undefined ||
+      (
+        isFiniteNumber(value.imageOffsetX) &&
+        value.imageOffsetX >= 0 &&
+        value.imageOffsetX <= 100
+      )
+    ) &&
     isFiniteNumber(value.hp) &&
     value.hp >= 0 &&
     armorKinds.every((kind) => isFiniteNumber(armor[kind])) &&
@@ -384,6 +392,7 @@ const cloneBosses = (
 ): readonly LogicSetBossEntry[] =>
   bosses.map((boss) => ({
     ...boss,
+    imageOffsetX: boss.imageOffsetX ?? 50,
     armor: { ...boss.armor },
     ratings: { ...boss.ratings }
   }))

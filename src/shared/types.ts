@@ -78,6 +78,7 @@ export interface LogicSetBossEntry {
   readonly act: string
   readonly speed: number
   readonly criticalChance: number
+  readonly imageOffsetX?: number
   readonly hp: number
   readonly armor: Readonly<Record<LogicSetBossArmorKind, number>>
   readonly ratings: Readonly<Record<LogicSetBossRatingKind, number>>
