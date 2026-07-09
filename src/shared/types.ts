@@ -7,7 +7,6 @@ export type WikiPage =
   | 'skulls-eyes'
   | 'sets'
   | 'monsters'
-  | 'bosses'
   | 'skills'
   | 'quests'
 
@@ -58,6 +57,30 @@ export interface LogicSetSetEntry {
     readonly affixes: readonly LogicSetAffix[]
   }
   readonly bonuses: readonly LogicSetSetBonus[]
+}
+
+export type LogicSetBossArmorKind =
+  | 'Physical'
+  | 'Ice'
+  | 'Fire'
+  | 'Electric'
+  | 'Poison'
+
+export type LogicSetBossRatingKind =
+  | 'Fatality'
+  | 'Brutality'
+  | 'Agility'
+  | 'Hostility'
+
+export interface LogicSetBossEntry {
+  readonly id: string
+  readonly name: string
+  readonly act: string
+  readonly speed: number
+  readonly criticalChance: number
+  readonly hp: number
+  readonly armor: Readonly<Record<LogicSetBossArmorKind, number>>
+  readonly ratings: Readonly<Record<LogicSetBossRatingKind, number>>
 }
 
 export const DEFAULT_LOGICSET_MANIFEST_URL =
@@ -314,6 +337,15 @@ export interface LogicSetApi {
     ) => Promise<readonly LogicSetSetEntry[]>
     readonly resetSetsToDefaults: () => Promise<
       readonly LogicSetSetEntry[]
+    >
+  }
+  readonly bosses: {
+    readonly getBosses: () => Promise<readonly LogicSetBossEntry[]>
+    readonly saveBosses: (
+      bosses: readonly LogicSetBossEntry[]
+    ) => Promise<readonly LogicSetBossEntry[]>
+    readonly resetBossesToDefaults: () => Promise<
+      readonly LogicSetBossEntry[]
     >
   }
   readonly modUpdate: {

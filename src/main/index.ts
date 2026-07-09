@@ -15,6 +15,10 @@ import type {
 import { DEFAULT_LOGICSET_MANIFEST_URL } from '../shared/types'
 import { PostHogAnalyticsService } from './services/analytics.service'
 import type { AnalyticsService } from './services/analytics.service'
+import {
+  isLogicSetBossEntries,
+  JsonBossesService
+} from './services/bosses.service'
 import { TorchlightGameLaunchService } from './services/game-launch.service'
 import { JsonLinesLocalLogService } from './services/local-log.service'
 import { JsonLocalSettingsService } from './services/local-settings.service'
@@ -56,6 +60,9 @@ const ipcChannels = {
   getSets: 'sets:get',
   saveSets: 'sets:save',
   resetSets: 'sets:reset',
+  getBosses: 'bosses:get',
+  saveBosses: 'bosses:save',
+  resetBosses: 'bosses:reset',
   getModUpdateInfo: 'mod-update:get-info',
   saveManifestUrl: 'mod-update:save-manifest-url',
   checkModUpdate: 'mod-update:check',
@@ -334,6 +341,9 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
   const setsService = new JsonSetsService(
     join(app.getPath('userData'), 'sets.json')
   )
+  const bossesService = new JsonBossesService(
+    join(app.getPath('userData'), 'bosses.json')
+  )
   const patchNotesService = new JsonPatchNotesService(
     join(app.getPath('userData'), 'patch-notes.json')
   )
@@ -467,6 +477,25 @@ const registerEnvironmentHandlers = async (): Promise<void> => {
     return setsService.save(sets)
   })
   ipcMain.handle(ipcChannels.resetSets, () => setsService.reset())
+  ipcMain.handle(ipcChannels.getBosses, () => bossesService.load())
+  ipcMain.handle(ipcChannels.saveBosses, (_event, bosses: unknown) => {
+    if (!isDevMode) {
+      throw new Error('Dev Mode is required to edit bosses.')
+    }
+
+    if (!isLogicSetBossEntries(bosses)) {
+      throw new Error('Invalid bosses data.')
+    }
+
+    return bossesService.save(bosses)
+  })
+  ipcMain.handle(ipcChannels.resetBosses, () => {
+    if (!isDevMode) {
+      throw new Error('Dev Mode is required to edit bosses.')
+    }
+
+    return bossesService.reset()
+  })
   ipcMain.handle(ipcChannels.getModUpdateInfo, () =>
     modUpdateService.getInfo()
   )

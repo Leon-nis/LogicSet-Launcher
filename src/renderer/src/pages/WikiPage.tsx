@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { WikiPage as WikiPageId } from '../../../shared/types'
 import { PageLayout } from '../components/PageLayout'
-import { BossesPage } from './BossesPage'
 import { MonstersPage } from './MonstersPage'
 import { SetsPage } from './SetsPage'
 import { SkullsEyesPage } from './SkullsEyesPage'
@@ -46,13 +45,6 @@ const wikiEntries: readonly WikiEntry[] = [
     marker: 'SK',
     description: 'Skill reference, effects, and progression.',
     component: SkillsPage
-  },
-  {
-    id: 'bosses',
-    label: 'Bosses',
-    marker: 'BO',
-    description: 'Boss encounters, mechanics, and rewards.',
-    component: BossesPage
   },
   {
     id: 'quests',

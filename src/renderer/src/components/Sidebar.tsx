@@ -1,4 +1,5 @@
 import type { NavigationPage } from '../../../shared/types'
+import logicSetLogo from '../assets/generated/logicset.webp'
 
 interface SidebarProps {
   readonly activePage: NavigationPage
@@ -23,7 +24,9 @@ export const Sidebar = ({
 }: SidebarProps): React.JSX.Element => (
   <aside className="sidebar">
     <div className="brand">
-      <div className="brand-mark">LS</div>
+      <div className="brand-mark">
+        <img src={logicSetLogo} alt="" aria-hidden="true" />
+      </div>
       <div>
         <strong>LogicSet</strong>
         <span>Launcher</span>

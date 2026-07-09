@@ -15,10 +15,6 @@ export const MonstersPage = (): React.JSX.Element => (
   <WipPage title="Monsters" />
 )
 
-export const BossesPage = (): React.JSX.Element => (
-  <WipPage title="Bosses" />
-)
-
 export const SkillsPage = (): React.JSX.Element => (
   <WipPage title="Skills" />
 )

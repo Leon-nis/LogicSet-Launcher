@@ -54,6 +54,11 @@ const logicSetApi: LogicSetApi = {
     saveSets: (sets) => ipcRenderer.invoke('sets:save', sets),
     resetSetsToDefaults: () => ipcRenderer.invoke('sets:reset')
   },
+  bosses: {
+    getBosses: () => ipcRenderer.invoke('bosses:get'),
+    saveBosses: (bosses) => ipcRenderer.invoke('bosses:save', bosses),
+    resetBossesToDefaults: () => ipcRenderer.invoke('bosses:reset')
+  },
   modUpdate: {
     getInfo: () => ipcRenderer.invoke('mod-update:get-info'),
     saveManifestUrl: (request) =>
