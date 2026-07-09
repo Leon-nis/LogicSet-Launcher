@@ -41,10 +41,27 @@ npm run dev
 Other available commands:
 
 ```bash
+npm run check:assets
+npm run optimize:assets
 npm run typecheck
 npm run build
 npm run preview
 ```
+
+## Assets
+
+Source images live in `assets-source`. These files are not imported by the
+launcher and are not bundled into the app.
+
+Optimized launcher assets are generated in `src/renderer/src/assets/generated`.
+
+- Source images may be large PNG, JPEG, AVIF, or WebP files.
+- Generated assets must be 500 KB or smaller.
+- The generated assets folder must stay under 10 MB.
+- Generated assets are script-owned and ignored by Git except for `.gitkeep`.
+- Use `npm run optimize:assets` to generate WebP files from `assets-source`.
+- `npm run dev` and `npm run build` generate optimized assets before running.
+- Import assets from `src/renderer/src/assets/generated`, not from `assets-source`.
 
 ## Structure
 
@@ -57,6 +74,8 @@ src/
 |   `-- index.ts
 |-- renderer/
 |   `-- src/
+|       |-- assets/
+|       |   `-- generated/
 |       |-- components/
 |       |-- pages/
 |       `-- App.tsx

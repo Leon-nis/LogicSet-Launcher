@@ -5,8 +5,10 @@
   "description": "Desktop launcher for LogicSet modded Torchlight II multiplayer.",
   "main": "./out/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
-    "build": "npm run typecheck && electron-vite build",
+    "dev": "npm run optimize:assets && electron-vite dev",
+    "build": "npm run optimize:assets && npm run check:assets && npm run typecheck && electron-vite build",
+    "check:assets": "node scripts/check-assets.mjs",
+    "optimize:assets": "node scripts/optimize-assets.mjs",
     "preview": "electron-vite preview",
     "typecheck": "tsc --build --pretty"
   },
@@ -23,6 +25,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "electron": "^39.2.7",
     "electron-vite": "^4.0.1",
+    "sharp": "^0.34.5",
     "typescript": "^5.9.3",
     "vite": "^7.2.2"
   },

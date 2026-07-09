@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { WikiPage as WikiPageId } from '../../../shared/types'
 import { PageLayout } from '../components/PageLayout'
+import { BossesPage } from './BossesPage'
+import { MonstersPage } from './MonstersPage'
 import { SetsPage } from './SetsPage'
 import { SkullsEyesPage } from './SkullsEyesPage'
 import {
-  BossesPage,
-  MonstersPage,
   QuestsPage,
   SkillsPage
 } from './WipPage'

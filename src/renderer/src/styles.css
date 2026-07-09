@@ -1949,6 +1949,232 @@ button:focus-visible {
   width: min(1180px, 100%);
 }
 
+.bosses-panel {
+  overflow: hidden;
+  border: 1px solid #232f3b;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #121a23, #0e151d);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 15%);
+}
+
+.bosses-toolbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #202b36;
+}
+
+.bosses-toolbar-copy {
+  min-width: 0;
+}
+
+.bosses-toolbar h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.bosses-toolbar p {
+  margin: 0;
+  color: #8f9baa;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.bosses-count {
+  flex: none;
+  padding: 6px 10px;
+  border: 1px solid #35685f;
+  border-radius: 999px;
+  color: #8de8cf;
+  background: #16312d;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.bosses-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px;
+}
+
+.boss-card {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 112px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #303a45;
+  border-radius: 12px;
+  background: #101821;
+}
+
+.boss-card-visual {
+  min-width: 0;
+  min-height: 100%;
+  overflow: hidden;
+  border-right: 1px solid #202b36;
+  background: #080d12;
+}
+
+.boss-card-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.boss-card-content {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding: 12px;
+}
+
+.boss-card-header {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.boss-card-header h2 {
+  margin: 3px 0 0;
+  color: #f3f7fb;
+  font-size: 17px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.boss-act {
+  color: #61ceb0;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.boss-hp {
+  flex: none;
+  padding: 5px 8px;
+  border: 1px solid #654c2e;
+  border-radius: 999px;
+  color: #e4b56f;
+  background: #2c2218;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.boss-core-stats,
+.boss-armor-grid {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  margin: 0;
+}
+
+.boss-core-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.boss-armor-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.boss-core-stats div,
+.boss-armor-item {
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #202b36;
+  border-radius: 8px;
+  background: #0d141c;
+}
+
+.boss-core-stats dt,
+.boss-armor-item dt {
+  margin-bottom: 3px;
+  color: #768494;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.boss-core-stats dd,
+.boss-armor-item dd {
+  margin: 0;
+  color: #dce5ed;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.boss-armor-item[data-armor="physical"] {
+  border-color: #4b5360;
+}
+
+.boss-armor-item[data-armor="ice"] {
+  border-color: #426982;
+}
+
+.boss-armor-item[data-armor="fire"] {
+  border-color: #7a4b37;
+}
+
+.boss-armor-item[data-armor="electric"] {
+  border-color: #696d3b;
+}
+
+.boss-armor-item[data-armor="poison"] {
+  border-color: #46683d;
+}
+
+.boss-rating-list {
+  display: grid;
+  gap: 7px;
+}
+
+.boss-rating {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+  color: #aeb9c5;
+  font-size: 11px;
+}
+
+.boss-rating > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boss-rating strong {
+  color: #dce5ed;
+  font-size: 11px;
+  text-align: right;
+}
+
+.boss-rating-pips {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.boss-rating-pips span {
+  height: 6px;
+  border-radius: 999px;
+  background: #25313d;
+}
+
+.boss-rating-pips span[data-filled="true"] {
+  background: #65d2b3;
+}
+
 .patch-notes-editor {
   display: grid;
   grid-template-columns: minmax(190px, 0.35fr) minmax(0, 1fr);
@@ -2184,6 +2410,10 @@ button:focus-visible {
   .patch-notes-editor-fields {
     grid-template-columns: 1fr;
   }
+
+  .bosses-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -2234,6 +2464,23 @@ button:focus-visible {
   .patch-note-dev-actions,
   .patch-note-dev-actions button {
     width: 100%;
+  }
+
+  .bosses-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bosses-count {
+    align-self: flex-start;
+  }
+
+  .boss-card {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .boss-armor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .field-row-controls {

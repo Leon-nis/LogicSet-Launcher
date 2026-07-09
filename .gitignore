@@ -7,3 +7,5 @@ dist/
 Thumbs.db
 .idea/
 .vscode/
+src/renderer/src/assets/generated/*
+!src/renderer/src/assets/generated/.gitkeep
