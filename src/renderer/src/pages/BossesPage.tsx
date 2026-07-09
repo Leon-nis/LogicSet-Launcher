@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import eldraynIcon from '../assets/generated/icon_eldrayn.webp'
 import fallenIcon from '../assets/generated/icon_fallen.webp'
 import grellIcon from '../assets/generated/icon_grell.webp'
@@ -8,6 +9,7 @@ import poggIcon from '../assets/generated/icon_pogg.webp'
 import widowIcon from '../assets/generated/icon_widow.webp'
 import willyIcon from '../assets/generated/icon_willy.webp'
 import { PageLayout } from '../components/PageLayout'
+import { useDevMode } from '../contexts/DevModeContext'
 
 type ArmorKind = 'Physical' | 'Ice' | 'Fire' | 'Electric' | 'Poison'
 type RatingKind = 'Fatality' | 'Brutality' | 'Agility' | 'Hostility'
@@ -38,6 +40,13 @@ const ratingKinds: readonly RatingKind[] = [
   'Agility',
   'Hostility'
 ]
+
+const ratingLabels: Readonly<Record<RatingKind, string>> = {
+  Fatality: 'Fatality',
+  Brutality: 'Brutality',
+  Agility: 'Dificulty',
+  Hostility: 'Boss Arena'
+}
 
 const bosses: readonly BossEntry[] = [
   {
@@ -244,74 +253,192 @@ const numberFormatter = new Intl.NumberFormat('en-US')
 
 const formatStat = (value: number): string => numberFormatter.format(value)
 
-export const BossesSection = (): React.JSX.Element => (
-  <section className="bosses-panel" aria-label="Act 1 boss list">
-    <div className="bosses-toolbar">
-      <div className="bosses-toolbar-copy">
-        <h2>Boss Index</h2>
-        <p>{bosses.length} encounters loaded from the current Act 1 icon set.</p>
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max)
+
+const readNumberInput = (
+  value: string,
+  fallback: number,
+  min: number,
+  max: number
+): number => {
+  const parsedValue = Number(value)
+  return Number.isFinite(parsedValue)
+    ? clamp(parsedValue, min, max)
+    : fallback
+}
+
+export const BossesSection = (): React.JSX.Element => {
+  const isDevMode = useDevMode()
+  const [editableBosses, setEditableBosses] =
+    useState<readonly BossEntry[]>(bosses)
+
+  const updateBossStat = (
+    bossId: string,
+    stat: 'speed' | 'criticalChance',
+    value: number
+  ): void => {
+    setEditableBosses((currentBosses) =>
+      currentBosses.map((boss) =>
+        boss.id === bossId
+          ? {
+              ...boss,
+              [stat]: value
+            }
+          : boss
+      )
+    )
+  }
+
+  const updateBossRating = (
+    bossId: string,
+    rating: RatingKind,
+    value: number
+  ): void => {
+    setEditableBosses((currentBosses) =>
+      currentBosses.map((boss) =>
+        boss.id === bossId
+          ? {
+              ...boss,
+              ratings: {
+                ...boss.ratings,
+                [rating]: value
+              }
+            }
+          : boss
+      )
+    )
+  }
+
+  return (
+    <section className="bosses-panel" aria-label="Act 1 boss list">
+      <div className="bosses-toolbar">
+        <div className="bosses-toolbar-copy">
+          <h2>Boss Index</h2>
+          <p>{editableBosses.length} encounters loaded from the current Act 1 icon set.</p>
+        </div>
+        <span className="bosses-count">{editableBosses.length} bosses</span>
       </div>
-      <span className="bosses-count">{bosses.length} bosses</span>
-    </div>
 
-    <div className="bosses-grid">
-      {bosses.map((boss) => (
-        <article className="boss-card" key={boss.id}>
-          <div className="boss-card-visual">
-            <img src={boss.iconPath} alt="" aria-hidden="true" />
-          </div>
-
-          <div className="boss-card-content">
-            <header className="boss-card-header">
-              <div>
-                <span className="boss-act">{boss.act}</span>
-                <h2>{boss.name}</h2>
-              </div>
-              <strong className="boss-hp">{formatStat(boss.hp)} HP</strong>
-            </header>
-
-            <dl className="boss-core-stats">
-              <div>
-                <dt>Speed</dt>
-                <dd>{boss.speed}</dd>
-              </div>
-              <div>
-                <dt>Critical</dt>
-                <dd>{boss.criticalChance}%</dd>
-              </div>
-            </dl>
-
-            <dl className="boss-armor-grid">
-              {armorKinds.map((kind) => (
-                <div className="boss-armor-item" data-armor={kind.toLowerCase()} key={kind}>
-                  <dt>{kind}</dt>
-                  <dd>{boss.armor[kind]}</dd>
-                </div>
-              ))}
-            </dl>
-
-            <div className="boss-rating-list">
-              {ratingKinds.map((kind) => (
-                <div className="boss-rating" key={kind}>
-                  <span>{kind}</span>
-                  <div className="boss-rating-pips" aria-label={`${kind}: ${boss.ratings[kind]} of 5`}>
-                    {Array.from({ length: 5 }, (_, index) => (
-                      <span
-                        data-filled={index < boss.ratings[kind]}
-                        key={index}
-                      />
-                    ))}
-                  </div>
-                  <strong>{boss.ratings[kind]}/5</strong>
-                </div>
-              ))}
+      <div className="bosses-grid">
+        {editableBosses.map((boss) => (
+          <article className="boss-card" key={boss.id}>
+            <div className="boss-card-visual">
+              <img src={boss.iconPath} alt="" aria-hidden="true" />
             </div>
-          </div>
-        </article>
-      ))}
-    </div>
-  </section>
-)
+
+            <div className="boss-card-content">
+              <header className="boss-card-header">
+                <div>
+                  <span className="boss-act">{boss.act}</span>
+                  <h2>{boss.name}</h2>
+                </div>
+                <strong className="boss-hp">{formatStat(boss.hp)} HP</strong>
+              </header>
+
+              <dl className="boss-core-stats">
+                <div>
+                  <dt>Speed</dt>
+                  <dd>
+                    {isDevMode ? (
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        aria-label={`${boss.name} speed`}
+                        value={boss.speed}
+                        onChange={(event) =>
+                          updateBossStat(
+                            boss.id,
+                            'speed',
+                            readNumberInput(event.target.value, boss.speed, 0, 999)
+                          )
+                        }
+                      />
+                    ) : (
+                      boss.speed
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Critical</dt>
+                  <dd>
+                    {isDevMode ? (
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        aria-label={`${boss.name} critical chance`}
+                        value={boss.criticalChance}
+                        onChange={(event) =>
+                          updateBossStat(
+                            boss.id,
+                            'criticalChance',
+                            readNumberInput(event.target.value, boss.criticalChance, 0, 100)
+                          )
+                        }
+                      />
+                    ) : (
+                      `${boss.criticalChance}%`
+                    )}
+                  </dd>
+                </div>
+              </dl>
+
+              <dl className="boss-armor-grid">
+                {armorKinds.map((kind) => (
+                  <div className="boss-armor-item" data-armor={kind.toLowerCase()} key={kind}>
+                    <dt>{kind}</dt>
+                    <dd>{boss.armor[kind]}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="boss-rating-list">
+                {ratingKinds.map((kind) => (
+                  <div className="boss-rating" key={kind}>
+                    <span>{ratingLabels[kind]}</span>
+                    <div
+                      className="boss-rating-pips"
+                      aria-label={`${ratingLabels[kind]}: ${boss.ratings[kind]} of 5`}
+                    >
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <span
+                          data-filled={index < boss.ratings[kind]}
+                          key={index}
+                        />
+                      ))}
+                    </div>
+                    {isDevMode ? (
+                      <input
+                        type="number"
+                        min="0"
+                        max="5"
+                        step="1"
+                        aria-label={`${boss.name} ${ratingLabels[kind]}`}
+                        value={boss.ratings[kind]}
+                        onChange={(event) =>
+                          updateBossRating(
+                            boss.id,
+                            kind,
+                            readNumberInput(event.target.value, boss.ratings[kind], 0, 5)
+                          )
+                        }
+                      />
+                    ) : (
+                      <strong>{boss.ratings[kind]}/5</strong>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 export const BossesPage = (): React.JSX.Element => (
   <PageLayout

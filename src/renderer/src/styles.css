@@ -2111,6 +2111,27 @@ button:focus-visible {
   font-weight: 800;
 }
 
+.boss-core-stats input,
+.boss-rating input {
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 4px 6px;
+  border: 1px solid #2a3744;
+  border-radius: 6px;
+  outline: none;
+  color: #dce5ed;
+  background: #091017;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.boss-core-stats input:focus,
+.boss-rating input:focus {
+  border-color: #428c7e;
+  box-shadow: 0 0 0 3px rgb(66 140 126 / 14%);
+}
+
 .boss-armor-item[data-armor="physical"] {
   border-color: #4b5360;
 }
@@ -2138,7 +2159,7 @@ button:focus-visible {
 
 .boss-rating {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 34px;
+  grid-template-columns: 82px minmax(0, 1fr) 48px;
   align-items: center;
   gap: 8px;
   color: #aeb9c5;
