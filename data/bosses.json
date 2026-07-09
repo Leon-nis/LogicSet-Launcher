@@ -15,7 +15,7 @@
     },
     "ratings": {
       "Fatality": 5,
-      "Brutality": 1,
+      "Brutality": 2,
       "Agility": 3,
       "Hostility": 3
     },
@@ -39,7 +39,7 @@
       "Fatality": 2,
       "Brutality": 4,
       "Agility": 1,
-      "Hostility": 2
+      "Hostility": 1
     },
     "imageOffsetX": 46
   },
@@ -82,7 +82,7 @@
     "ratings": {
       "Fatality": 4,
       "Brutality": 3,
-      "Agility": 1,
+      "Agility": 2,
       "Hostility": 2
     },
     "imageOffsetX": 73
@@ -147,7 +147,7 @@
     },
     "ratings": {
       "Fatality": 3,
-      "Brutality": 1,
+      "Brutality": 3,
       "Agility": 5,
       "Hostility": 2
     },
@@ -171,7 +171,7 @@
       "Fatality": 3,
       "Brutality": 3,
       "Agility": 1,
-      "Hostility": 4
+      "Hostility": 5
     },
     "imageOffsetX": 50
   },
@@ -192,7 +192,7 @@
     "ratings": {
       "Fatality": 3,
       "Brutality": 4,
-      "Agility": 2,
+      "Agility": 3,
       "Hostility": 4
     },
     "imageOffsetX": 50
@@ -213,7 +213,7 @@
     },
     "ratings": {
       "Fatality": 2,
-      "Brutality": 2,
+      "Brutality": 3,
       "Agility": 2,
       "Hostility": 4
     },
@@ -256,9 +256,9 @@
       "Poison": 263
     },
     "ratings": {
-      "Fatality": 2,
-      "Brutality": 2,
-      "Agility": 2,
+      "Fatality": 1,
+      "Brutality": 1,
+      "Agility": 1,
       "Hostility": 4
     },
     "imageOffsetX": 57
